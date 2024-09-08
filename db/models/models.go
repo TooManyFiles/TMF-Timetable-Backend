@@ -32,19 +32,22 @@ type Class struct {
 
 // User model
 type User struct {
-	bun.BaseModel `bun:"table:user"`
-	Id            int     `bun:"id,pk,autoincrement,notnull"`
-	Name          string  `bun:"name,unique"`
-	Role          string  `bun:"role"`
-	DefaultChoice int     `bun:"defaultChoice"`
-	PwdHash       string  `bun:"pwdHash"`
-	Classes       []int   `pg:"classes,array"`
-	Email         string  `pg:"email"`
-	Choice        *Choice `bun:"rel:belongs-to,join:defaultChoice=id"`
-	Class         *Class  `bun:"rel:belongs-to,join:classes=id"`
+	bun.BaseModel   `bun:"table:user"`
+	Id              int     `bun:"id,pk,autoincrement,notnull"`
+	Name            string  `bun:"name,unique"`
+	Role            string  `bun:"role"`
+	DefaultChoiceId int     `bun:"defaultChoice"`
+	PwdHash         string  `bun:"pwdHash"`
+	Classes         []int   `pg:"classes,array"`
+	Email           string  `pg:"email"`
+	DefaultChoice   *Choice `bun:"rel:belongs-to,join:defaultChoice=id"`
+	Class           *Class  `bun:"rel:belongs-to,join:classes=id"`
 }
 
-func (user *User) FromGenUser(genUser gen.User) User {
+func (user *User) FromGen(genUser gen.User) User {
+	if user == nil {
+		user = &User{}
+	}
 	if genUser.Id != nil {
 		user.Id = int(*genUser.Id)
 	}
@@ -55,7 +58,7 @@ func (user *User) FromGenUser(genUser gen.User) User {
 		user.Role = string(*genUser.Role)
 	}
 	if genUser.DefaultChoice != nil && genUser.DefaultChoice.Id != nil {
-		user.DefaultChoice = *genUser.DefaultChoice.Id
+		user.DefaultChoiceId = *genUser.DefaultChoice.Id
 	}
 	if genUser.Classes != nil {
 		user.Classes = *genUser.Classes
@@ -65,10 +68,10 @@ func (user *User) FromGenUser(genUser gen.User) User {
 	}
 	return *user
 }
-func (user *User) ToGenUser() gen.User {
+func (user *User) ToGen() gen.User {
 	role := gen.UserRole(user.Role)
-	if user.Choice != nil {
-		choice := user.Choice.ToGenChoice()
+	if user.DefaultChoice != nil {
+		choice := user.DefaultChoice.ToGen()
 		return gen.User{
 			Id:            &user.Id,
 			Name:          user.Name,
@@ -82,7 +85,7 @@ func (user *User) ToGenUser() gen.User {
 		Id:            &user.Id,
 		Name:          user.Name,
 		Role:          &role,
-		DefaultChoice: &gen.Choice{Id: &user.DefaultChoice},
+		DefaultChoice: &gen.Choice{Id: &user.DefaultChoiceId},
 		Classes:       &user.Classes,
 		Email:         &user.Email,
 	}
@@ -136,7 +139,7 @@ type Choice struct {
 	User          *User  `bun:"rel:belongs-to,join:userId=id"`
 }
 
-func (choice *Choice) ToGenChoice() gen.Choice {
+func (choice *Choice) ToGen() gen.Choice {
 	var choiceMap map[string]interface{}
 
 	// Unmarshal the JSON string into a map
@@ -154,6 +157,25 @@ func (choice *Choice) ToGenChoice() gen.Choice {
 		UserId: &choice.UserId,
 		Choice: &choiceMap,
 	}
+}
+func (choice *Choice) FromGen(genChoice gen.Choice) Choice {
+	if choice == nil {
+		choice = &Choice{}
+	}
+	if genChoice.Id != nil {
+		choice.Id = int(*genChoice.Id)
+	}
+	if *genChoice.Name != "" {
+		choice.Name = *genChoice.Name
+	}
+	if genChoice.UserId != nil {
+		choice.UserId = *genChoice.UserId
+	}
+	jsonChoice, _ := json.Marshal(genChoice.Choice)
+	if genChoice.Choice != nil {
+		choice.Choice = string(jsonChoice)
+	}
+	return *choice
 }
 
 type Menu struct {

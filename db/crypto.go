@@ -72,7 +72,7 @@ func (database *Database) CreateSession(body gen.PostLoginJSONBody, cxt context.
 		if err != nil {
 			return "", gen.User{}, err
 		}
-		return token, user.ToGenUser(), err
+		return token, user.ToGen(), err
 	}
 	return "", gen.User{}, err
 
@@ -168,5 +168,5 @@ func (database *Database) verifySession(tokenString string, cxt context.Context)
 }
 func (database *Database) VerifySession(tokenString string, cxt context.Context) (gen.User, error) {
 	user, err := database.verifySession(tokenString, cxt)
-	return user.ToGenUser(), err
+	return user.ToGen(), err
 }
