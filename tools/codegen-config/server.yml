@@ -7,5 +7,5 @@ output-options:
   include-tags:
     - cafeteria
     - user
-
+    - login
 

@@ -2,11 +2,16 @@ package dbModels
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	"github.com/uptrace/bun"
 )
+
+var ErrPasswordNotMachRequirements = errors.New("crypto: Password dose not match the requirements.")
+var ErrUserNotFound = errors.New("db: User not found.")
+var ErrInvalidPassword = errors.New("db: The Password is wrong.")
 
 // Class model
 type Class struct {

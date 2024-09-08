@@ -7,7 +7,8 @@ import (
 	"net/http"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
-	"github.com/TooManyFiles/TMF-Timetable-Backend/db"
+	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -47,7 +48,7 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Internal server error."+pgErr.Field('C'), http.StatusInternalServerError)
 				log.Printf("Error type: %T, Details: %s", err, err.Error())
 			}
-		} else if errors.Is(err, db.ErrPasswordNotMachRequirements) {
+		} else if errors.Is(err, dbModels.ErrPasswordNotMachRequirements) {
 			http.Error(w, " Password dose not match the requirements.", http.StatusUnprocessableEntity)
 		} else if errors.Is(err, bcrypt.ErrPasswordTooLong) {
 			http.Error(w, "Password to long.", http.StatusUnprocessableEntity)
@@ -86,4 +87,51 @@ func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, user
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// Returns currently logged in user.
+// (GET /currentUser)
+func (server Server) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	if token[:7] == "Bearer " {
+		token = token[7:]
+		user, err := server.DB.VerifySession(token, r.Context())
+		if err != nil {
+			if errors.Is(err, dbModels.ErrInvalidPassword) || errors.Is(err, dbModels.ErrUserNotFound) {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			var jwterr *jwt.ValidationError
+			if errors.As(err, &jwterr) {
+				errCode := jwterr.Errors
+				// Group 1: Malformed, Unverifiable, Signature Invalid
+				if errCode&jwt.ValidationErrorMalformed != 0 ||
+					errCode&jwt.ValidationErrorUnverifiable != 0 ||
+					errCode&jwt.ValidationErrorSignatureInvalid != 0 {
+					http.Error(w, "Token malformed or Signature Invalid.", http.StatusBadRequest)
+					return
+				} else if errCode&jwt.ValidationErrorExpired != 0 ||
+					errCode&jwt.ValidationErrorNotValidYet != 0 {
+					http.Error(w, "Token currently not Valid.", http.StatusUnauthorized)
+					return
+				} else if errCode&jwt.ValidationErrorId != 0 ||
+					errCode&jwt.ValidationErrorIssuedAt != 0 ||
+					errCode&jwt.ValidationErrorIssuer != 0 ||
+					errCode&jwt.ValidationErrorClaimsInvalid != 0 {
+					http.Error(w, "Invalid token", http.StatusUnauthorized)
+					return
+				} else {
+					http.Error(w, "Malformed Authorization", http.StatusBadRequest)
+				}
+			}
+			http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(user)
+		return
+	}
+	http.Error(w, "Malformed Authorization", http.StatusBadRequest)
 }

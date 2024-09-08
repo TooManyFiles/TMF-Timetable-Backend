@@ -12,6 +12,7 @@ require (
 	github.com/go-pg/pg/v10 v10.13.0 // indirect
 	github.com/go-pg/zerochecker v0.2.0 // indirect
 	github.com/go-resty/resty/v2 v2.14.0 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

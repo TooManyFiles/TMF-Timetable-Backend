@@ -18,6 +18,15 @@ type ServerInterface interface {
 	// Get Menu in a defined time frame.
 	// (GET /cafeteria)
 	GetCafeteria(w http.ResponseWriter, r *http.Request, params GetCafeteriaParams)
+	// Returns currently logged in user.
+	// (GET /currentUser)
+	GetCurrentUser(w http.ResponseWriter, r *http.Request)
+	// Login and get a token
+	// (POST /login)
+	PostLogin(w http.ResponseWriter, r *http.Request)
+	// Logout and invalidate token
+	// (POST /logout)
+	PostLogout(w http.ResponseWriter, r *http.Request)
 	// Get all users
 	// (GET /users)
 	GetUsers(w http.ResponseWriter, r *http.Request)
@@ -71,6 +80,55 @@ func (siw *ServerInterfaceWrapper) GetCafeteria(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetCafeteria(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetCurrentUser operation middleware
+func (siw *ServerInterfaceWrapper) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCurrentUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostLogin operation middleware
+func (siw *ServerInterfaceWrapper) PostLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostLogout operation middleware
+func (siw *ServerInterfaceWrapper) PostLogout(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostLogout(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -313,6 +371,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc("GET "+options.BaseURL+"/cafeteria", wrapper.GetCafeteria)
+	m.HandleFunc("GET "+options.BaseURL+"/currentUser", wrapper.GetCurrentUser)
+	m.HandleFunc("POST "+options.BaseURL+"/login", wrapper.PostLogin)
+	m.HandleFunc("POST "+options.BaseURL+"/logout", wrapper.PostLogout)
 	m.HandleFunc("GET "+options.BaseURL+"/users", wrapper.GetUsers)
 	m.HandleFunc("POST "+options.BaseURL+"/users", wrapper.PostUsers)
 	m.HandleFunc("DELETE "+options.BaseURL+"/users/{userId}", wrapper.DeleteUsersUserId)
