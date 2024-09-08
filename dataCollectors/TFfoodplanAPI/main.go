@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/TooManyFiles/TMF-Timetable-Backend/db"
+	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/go-resty/resty/v2" // Import Resty
 )
 
@@ -15,7 +15,7 @@ type TFfoodplanAPI struct {
 }
 
 // getForDate fetches the menu for a specific date from the external API
-func (api *TFfoodplanAPI) GetForDate(date time.Time) (db.Menu, error) {
+func (api *TFfoodplanAPI) GetForDate(date time.Time) (dbModels.Menu, error) {
 	client := resty.New()
 
 	// Format the date for the API
@@ -42,18 +42,26 @@ func (api *TFfoodplanAPI) GetForDate(date time.Time) (db.Menu, error) {
 
 	if err != nil {
 		log.Println("Error fetching data:", err)
-		return db.Menu{}, err
+		return dbModels.Menu{}, err
 	}
 
 	// Check if the response is empty
 	if len(apiResponse) == 0 {
 		log.Println("No data returned from API")
-		return db.Menu{}, fmt.Errorf("no data returned from API")
+		return dbModels.Menu{}, fmt.Errorf("no data returned from API")
 	}
-
+	// Check if the response is empty
+	if len(apiResponse) == 0 {
+		log.Println("No data returned from API for date:", date)
+		// Return a menu indicating the date was skipped
+		return dbModels.Menu{
+			Date:         date,
+			NotAPIServed: true,
+		}, nil
+	}
 	// Convert the API response to the db.Menu struct
 	menuDate, _ := time.Parse("2/1/2006", apiResponse[0].Date) // Parse the date
-	menu := db.Menu{
+	menu := dbModels.Menu{
 		Date:        menuDate,
 		Cookteam:    apiResponse[0].Cookteam,
 		MainDish:    apiResponse[0].MainDish,
@@ -66,16 +74,16 @@ func (api *TFfoodplanAPI) GetForDate(date time.Time) (db.Menu, error) {
 }
 
 // Update sends the updated menu to the API
-func (api *TFfoodplanAPI) Update(menu db.Menu) (db.Menu, error) {
+func (api *TFfoodplanAPI) Update(menu dbModels.Menu) (dbModels.Menu, error) {
 	return api.GetForDate(menu.Date)
 }
 
 // getForRange fetches menus for a range of dates from the external API
-func (api *TFfoodplanAPI) GetForRange(startDate time.Time, dataCount int) ([]db.Menu, error) {
+func (api *TFfoodplanAPI) GetForRange(startDate time.Time, dataCount int) ([]dbModels.Menu, error) {
 	client := resty.New()
 
 	// Format the date for the API
-	startDateStr := startDate.Format("2.1.2006") // `j/n/Y` format used by the API
+	startDateStr := startDate.Format("2.1.2006")
 
 	// Construct the URL with query parameters for a date range
 	apiUrl := fmt.Sprintf("%s?dateFormat=j/n/Y&dataMode=days&dataCount=%d&dataFromTime=%s", api.URL, dataCount, url.QueryEscape(startDateStr))
@@ -102,12 +110,15 @@ func (api *TFfoodplanAPI) GetForRange(startDate time.Time, dataCount int) ([]db.
 	}
 
 	// Initialize a slice to hold the menus
-	menus := make([]db.Menu, 0, len(apiResponse))
+	menus := make([]dbModels.Menu, 0, dataCount)
+
+	// Create a map for quick lookup of dates received from API
+	receivedDates := make(map[time.Time]bool)
 
 	// Iterate over the API response using range and convert each entry to db.Menu
 	for _, apiMenu := range apiResponse {
-		menuDate, _ := time.Parse("2.1.2006", apiMenu.Date) // Parse the date
-		menu := db.Menu{
+		menuDate, _ := time.Parse("2/1/2006", apiMenu.Date) // Parse the date
+		menu := dbModels.Menu{
 			Date:        menuDate,
 			Cookteam:    apiMenu.Cookteam,
 			MainDish:    apiMenu.MainDish,
@@ -115,8 +126,19 @@ func (api *TFfoodplanAPI) GetForRange(startDate time.Time, dataCount int) ([]db.
 			Garnish:     apiMenu.Garnish,
 			Dessert:     apiMenu.Dessert,
 		}
-		menus = append(menus, menu) // Add the menu to the slice
+		menus = append(menus, menu)
+		receivedDates[menuDate] = true
 	}
 
+	endDate := startDate.AddDate(0, 0, dataCount-1)
+	// Identify and create skipped dates
+	for currentDate := startDate; !currentDate.After(endDate); currentDate = currentDate.AddDate(0, 0, 1) {
+		if !receivedDates[currentDate] {
+			menus = append(menus, dbModels.Menu{
+				Date:         currentDate,
+				NotAPIServed: true,
+			})
+		}
+	}
 	return menus, nil
 }

@@ -1,4 +1,4 @@
-package db
+package dbModels
 
 import (
 	"context"
@@ -86,12 +86,13 @@ type Menu struct {
 	bun.BaseModel `bun:"table:menu"`
 	Id            int64     `bun:"id,pk,autoincrement,notnull"`
 	Cookteam      string    `json:"cookteam,omitempty"`
-	Date          time.Time `json:"date,omitempty",bun:"date,unique"`
+	Date          time.Time `bun:"date,unique,notnull" json:"date,omitempty"`
 	Dessert       string    `json:"dessert,omitempty"`
 	Garnish       string    `json:"garnish,omitempty"`
 	MainDish      string    `json:"mainDish,omitempty"`
 	MainDishVeg   string    `json:"mainDishVeg,omitempty"`
 	UpdatedAt     time.Time `bun:",nullzero,notnull,default:current_timestamp"`
+	NotAPIServed  bool      `bun:"notAPIServed,notnull,default:false"`
 }
 
 var _ bun.BeforeAppendModelHook = (*Menu)(nil)

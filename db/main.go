@@ -4,10 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"time"
 
-	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
-	openapi_types "github.com/oapi-codegen/runtime/types"
+	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -52,14 +50,14 @@ func NewDatabase(config DatabaseConfig) Database {
 func (database *Database) createSchema(ctx context.Context) error {
 	// List of models to create
 	models := []interface{}{
-		&Class{},
-		&User{},
-		&Teacher{},
-		&Lesson{},
-		&Room{},
-		&Subject{},
-		&Choice{},
-		&Menu{},
+		&dbModels.Class{},
+		&dbModels.User{},
+		&dbModels.Teacher{},
+		&dbModels.Lesson{},
+		&dbModels.Room{},
+		&dbModels.Subject{},
+		&dbModels.Choice{},
+		&dbModels.Menu{},
 	}
 
 	for _, model := range models {
@@ -75,38 +73,4 @@ func (database *Database) createSchema(ctx context.Context) error {
 	}
 	log.Println("Schema created.")
 	return nil
-}
-
-// FetchMenuForDate fetches a menu from the database based on the given date
-func (database *Database) FetchMenuForDate(startDate time.Time, days int, ctx context.Context) ([]gen.Menu, error) {
-
-	// Calculate the end date by adding 'days - 1' to startDate
-	endDate := startDate.AddDate(0, 0, days-1)
-
-	var dbMenus []Menu
-	err := database.DB.NewSelect().
-		Model(&dbMenus).
-		Where("date BETWEEN ? AND ?", startDate, endDate).
-		Scan(ctx)
-	if err != nil {
-		log.Println("Error fetching menus:", err)
-		return []gen.Menu{}, err
-	}
-	if dbMenus == nil {
-		return []gen.Menu{}, nil
-	}
-
-	// Convert db.Menu to gen.Menu in one pass
-	menus := make([]gen.Menu, len(dbMenus))
-	for i, dbMenu := range dbMenus {
-		menus[i] = gen.Menu{
-			Cookteam:    &dbMenu.Cookteam,
-			Date:        &openapi_types.Date{Time: dbMenu.Date},
-			Dessert:     &dbMenu.Dessert,
-			Garnish:     &dbMenu.Garnish,
-			MainDish:    &dbMenu.MainDish,
-			MainDishVeg: &dbMenu.MainDishVeg,
-		}
-	}
-	return menus, nil
 }

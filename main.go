@@ -15,16 +15,24 @@ import (
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
-	tffoodplanapi "github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors/TFfoodplanAPI"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/db"
 )
 
 var database db.Database
 
 func main() {
-	database = db.NewDatabase(config.DatabaseConfig)
-	menu()
+	dataCollectors.InitDataCollectors()
+	initDB()
+	initServer()
 
+}
+
+func initDB() {
+	database = db.NewDatabase(config.DatabaseConfig)
+}
+
+func initServer() {
 	// create a type that satisfies the `api.ServerInterface`, which contains an implementation of every operation from the generated code
 	server := api.NewServer(database)
 
@@ -41,13 +49,10 @@ func main() {
 	// // And we serve HTTP until the world ends.
 	log.Fatal(s.ListenAndServe())
 }
-func menu() {
-	api := &tffoodplanapi.TFfoodplanAPI{
-		URL: "http://www.treffpunkt-fanny.de/images/stories/dokumente/Essensplaene/api/TFfoodplanAPI.php",
-	}
 
+func menu() {
 	// Fetch menu for a specific date
-	menu, err := api.GetForDate(time.Date(2024, 9, 10, 0, 0, 0, 0, time.Local))
+	menu, err := dataCollectors.DataCollectors.TFfoodplanAPI.GetForDate(time.Date(2024, 9, 10, 0, 0, 0, 0, time.Local))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,14 +64,14 @@ func menu() {
 	//
 
 	// Update menu (if needed)
-	updatedMenu, err := api.Update(menu)
+	updatedMenu, err := dataCollectors.DataCollectors.TFfoodplanAPI.Update(menu)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Updated menu:", updatedMenu)
 	startDate := time.Now()
 	dataCount := 3 // Fetch menus for 3 days
-	menus, err := api.GetForRange(startDate, dataCount)
+	menus, err := dataCollectors.DataCollectors.TFfoodplanAPI.GetForRange(startDate, dataCount)
 	if err != nil {
 		log.Fatal("Failed to fetch menus:", err)
 	}
