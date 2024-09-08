@@ -84,9 +84,8 @@ type Choice struct {
 
 type Menu struct {
 	bun.BaseModel `bun:"table:menu"`
-	Id            int64     `bun:"id,pk,autoincrement,notnull"`
+	Date          time.Time `bun:"date,pk,unique,notnull,type:date" json:"date,omitempty"`
 	Cookteam      string    `json:"cookteam,omitempty"`
-	Date          time.Time `bun:"date,unique,notnull" json:"date,omitempty"`
 	Dessert       string    `json:"dessert,omitempty"`
 	Garnish       string    `json:"garnish,omitempty"`
 	MainDish      string    `json:"mainDish,omitempty"`
