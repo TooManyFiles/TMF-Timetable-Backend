@@ -1,0 +1,10 @@
+package: gen
+generate:
+  std-http-server: true
+output: api/gen/server.go
+
+output-options:
+  include-tags:
+    - cafeteria
+
+
