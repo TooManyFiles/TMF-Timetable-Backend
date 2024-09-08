@@ -96,10 +96,10 @@ func (database *Database) FetchMenuForDate(startDate time.Time, days int, ctx co
 		return []gen.Menu{}, nil
 	}
 
-	// Convert db.Menu to gen.Menu for the response
-	var menus []gen.Menu
-	for _, dbMenu := range dbMenus {
-		menu := gen.Menu{
+	// Convert db.Menu to gen.Menu in one pass
+	menus := make([]gen.Menu, len(dbMenus))
+	for i, dbMenu := range dbMenus {
+		menus[i] = gen.Menu{
 			Cookteam:    &dbMenu.Cookteam,
 			Date:        &openapi_types.Date{Time: dbMenu.Date},
 			Dessert:     &dbMenu.Dessert,
@@ -107,8 +107,6 @@ func (database *Database) FetchMenuForDate(startDate time.Time, days int, ctx co
 			MainDish:    &dbMenu.MainDish,
 			MainDishVeg: &dbMenu.MainDishVeg,
 		}
-		menus = append(menus, menu)
 	}
-
 	return menus, nil
 }
