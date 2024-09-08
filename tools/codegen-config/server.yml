@@ -6,5 +6,6 @@ output: api/gen/server.go
 output-options:
   include-tags:
     - cafeteria
+    - user
 
 

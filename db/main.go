@@ -73,4 +73,5 @@ func (database *Database) createSchema(ctx context.Context) error {
 	}
 	log.Println("Schema created.")
 	return nil
+
 }

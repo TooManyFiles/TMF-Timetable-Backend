@@ -69,7 +69,7 @@ type User struct {
 	// - If a Class ID is present as a negative as well as a positive value only the positive should be used.
 	DefaultChoice *Choice   `json:"defaultChoice,omitempty"`
 	Email         *string   `json:"email,omitempty"`
-	Id            *string   `json:"id,omitempty"`
+	Id            *int      `json:"id,omitempty"`
 	Name          string    `json:"name"`
 	Role          *UserRole `json:"role,omitempty"`
 }

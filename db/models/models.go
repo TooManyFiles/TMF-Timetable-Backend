@@ -4,18 +4,19 @@ import (
 	"context"
 	"time"
 
+	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	"github.com/uptrace/bun"
 )
 
 // Class model
 type Class struct {
 	bun.BaseModel        `bun:"table:classes,alias:c"`
-	Id                   int64  `bun:"id,pk,autoincrement,notnull"`
+	Id                   int    `bun:"id,pk,autoincrement,notnull"`
 	Name                 string `bun:"name"`
-	MainTeacherId        int64  `bun:"mainTeacherId"`
-	SecondaryTeacherId   int64  `bun:"secondaryTeacherId"`
-	MainClassleader      int64  `bun:"mainClassleader"`
-	SecondaryClassleader int64  `bun:"secondaryClassleader"`
+	MainTeacherId        int    `bun:"mainTeacherId"`
+	SecondaryTeacherId   int    `bun:"secondaryTeacherId"`
+	MainClassleader      int    `bun:"mainClassleader"`
+	SecondaryClassleader int    `bun:"secondaryClassleader"`
 
 	Teacher *Teacher `bun:"rel:belongs-to,join:mainTeacherId=id,join:secondaryTeacherId=id"`
 	User    *User    `bun:"rel:belongs-to,join:mainClassleader=id,join:secondaryClassleader=id"`
@@ -24,21 +25,55 @@ type Class struct {
 // User model
 type User struct {
 	bun.BaseModel `bun:"table:user"`
-	Id            int64   `bun:"id,pk,autoincrement,notnull"`
-	Name          string  `bun:"name"`
+	Id            int     `bun:"id,pk,autoincrement,notnull"`
+	Name          string  `bun:"name,unique"`
 	Role          string  `bun:"role"`
-	DefaultChoice string  `bun:"defaultChoice"`
+	DefaultChoice int     `bun:"defaultChoice"`
 	PwdHash       string  `bun:"pwdHash"`
-	Classes       []int64 `pg:"classes,array"`
+	Classes       []int   `pg:"classes,array"`
+	Email         string  `pg:"email"`
 	Choice        *Choice `bun:"rel:belongs-to,join:defaultChoice=id"`
 	Class         *Class  `bun:"rel:belongs-to,join:classes=id"`
+}
+
+func (user *User) FromGenUser(genUser gen.User) User {
+	if genUser.Id != nil {
+		user.Id = int(*genUser.Id)
+	}
+	if genUser.Name != "" {
+		user.Name = genUser.Name
+	}
+	if genUser.Role != nil {
+		user.Role = string(*genUser.Role)
+	}
+	if genUser.DefaultChoice != nil && genUser.DefaultChoice.Id != nil {
+		user.DefaultChoice = *genUser.DefaultChoice.Id
+	}
+	if genUser.Classes != nil {
+		user.Classes = *genUser.Classes
+	}
+	if genUser.Email != nil {
+		user.Email = *genUser.Email
+	}
+	return *user
+}
+func (user *User) ToGenUser() gen.User {
+	role := gen.UserRole(user.Role)
+	return gen.User{
+		Id:            &user.Id,
+		Name:          user.Name,
+		Role:          &role,
+		DefaultChoice: &gen.Choice{Id: &user.DefaultChoice},
+		Classes:       &user.Classes,
+		Email:         &user.Email,
+	}
 }
 
 // Teacher model
 type Teacher struct {
 	bun.BaseModel `bun:"table:teacher"`
-	Id            int64 `bun:"id,pk,autoincrement,notnull"`
-	UserId        int64 `bun:"userId"`
+	Id            int `bun:"id,pk,autoincrement,notnull"`
+	UserId        int `bun:"userId"`
 	Name          string
 	FirstName     string
 	Pronoun       string
@@ -49,12 +84,12 @@ type Teacher struct {
 // Lesson model
 type Lesson struct {
 	bun.BaseModel `bun:"table:lesson"`
-	Id            int64   `bun:"id,pk,autoincrement,notnull"`
-	Subjects      []int64 `pg:",array"`
-	Classes       []int64 `pg:",array"`
-	Teachers      []int64 `pg:",array"`
-	Rooms         []int64 `pg:",array"`
-	StartTime     string  // Date-time format in Go can be parsed as time.Time
+	Id            int    `bun:"id,pk,autoincrement,notnull"`
+	Subjects      []int  `pg:",array"`
+	Classes       []int  `pg:",array"`
+	Teachers      []int  `pg:",array"`
+	Rooms         []int  `pg:",array"`
+	StartTime     string // Date-time format in Go can be parsed as time.Time
 	EndTime       string
 	LastUpdate    string
 }
@@ -62,7 +97,7 @@ type Lesson struct {
 // Room model
 type Room struct {
 	bun.BaseModel         `bun:"table:room"`
-	Id                    int64 `bun:"id,pk,autoincrement,notnull"`
+	Id                    int `bun:"id,pk,autoincrement,notnull"`
 	Name                  string
 	AdditionalInformation string
 }
@@ -70,13 +105,13 @@ type Room struct {
 // Subject model
 type Subject struct {
 	bun.BaseModel `bun:"table:subject"`
-	Id            int64 `bun:"id,pk,autoincrement,notnull"`
+	Id            int `bun:"id,pk,autoincrement,notnull"`
 	Name          string
 }
 type Choice struct {
 	bun.BaseModel `bun:"table:choice"`
-	Id            int64 `bun:"id,pk,autoincrement,notnull"`
-	UserId        int64 `bun:"userId"`
+	Id            int `bun:"id,pk,autoincrement,notnull"`
+	UserId        int `bun:"userId"`
 	Name          string
 	Choice        string // Assuming this is a JSON field
 	User          *User  `bun:"rel:belongs-to,join:userId=id"`
