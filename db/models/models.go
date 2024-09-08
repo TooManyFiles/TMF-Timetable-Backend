@@ -2,6 +2,7 @@ package dbModels
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -15,16 +16,18 @@ var ErrInvalidPassword = errors.New("db: The Password is wrong.")
 
 // Class model
 type Class struct {
-	bun.BaseModel        `bun:"table:classes,alias:c"`
-	Id                   int    `bun:"id,pk,autoincrement,notnull"`
-	Name                 string `bun:"name"`
-	MainTeacherId        int    `bun:"mainTeacherId"`
-	SecondaryTeacherId   int    `bun:"secondaryTeacherId"`
-	MainClassleader      int    `bun:"mainClassleader"`
-	SecondaryClassleader int    `bun:"secondaryClassleader"`
+	bun.BaseModel          `bun:"table:classes,alias:c"`
+	Id                     int    `bun:"id,pk,autoincrement,notnull"`
+	Name                   string `bun:"name"`
+	MainTeacherId          int    `bun:"mainTeacherId"`
+	SecondaryTeacherId     int    `bun:"secondaryTeacherId"`
+	MainClassleaderId      int    `bun:"mainClassleader"`
+	SecondaryClassleaderId int    `bun:"secondaryClassleader"`
 
-	Teacher *Teacher `bun:"rel:belongs-to,join:mainTeacherId=id,join:secondaryTeacherId=id"`
-	User    *User    `bun:"rel:belongs-to,join:mainClassleader=id,join:secondaryClassleader=id"`
+	MainTeacher          *Teacher `bun:"rel:belongs-to,join:mainTeacherId=id"`
+	SecondaryTeacher     *Teacher `bun:"rel:belongs-to,join:secondaryTeacherId=id"`
+	MainClassleader      *User    `bun:"rel:belongs-to,join:mainClassleader=id"`
+	SecondaryClassleader *User    `bun:"rel:belongs-to,join:secondaryClassleader=id"`
 }
 
 // User model
@@ -64,6 +67,17 @@ func (user *User) FromGenUser(genUser gen.User) User {
 }
 func (user *User) ToGenUser() gen.User {
 	role := gen.UserRole(user.Role)
+	if user.Choice != nil {
+		choice := user.Choice.ToGenChoice()
+		return gen.User{
+			Id:            &user.Id,
+			Name:          user.Name,
+			Role:          &role,
+			DefaultChoice: &choice,
+			Classes:       &user.Classes,
+			Email:         &user.Email,
+		}
+	}
 	return gen.User{
 		Id:            &user.Id,
 		Name:          user.Name,
@@ -120,6 +134,26 @@ type Choice struct {
 	Name          string
 	Choice        string // Assuming this is a JSON field
 	User          *User  `bun:"rel:belongs-to,join:userId=id"`
+}
+
+func (choice *Choice) ToGenChoice() gen.Choice {
+	var choiceMap map[string]interface{}
+
+	// Unmarshal the JSON string into a map
+	err := json.Unmarshal([]byte(choice.Choice), &choiceMap)
+	if err != nil {
+		return gen.Choice{
+			Id:     &choice.Id,
+			Name:   &choice.Name,
+			UserId: &choice.UserId,
+		}
+	}
+	return gen.Choice{
+		Id:     &choice.Id,
+		Name:   &choice.Name,
+		UserId: &choice.UserId,
+		Choice: &choiceMap,
+	}
 }
 
 type Menu struct {

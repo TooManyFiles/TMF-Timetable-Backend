@@ -44,6 +44,7 @@ func (server Server) PostLogin(w http.ResponseWriter, r *http.Request) {
 		Secure:   true, // Set to true if you're using HTTPS
 		SameSite: http.SameSiteLaxMode,
 	})
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
 }
