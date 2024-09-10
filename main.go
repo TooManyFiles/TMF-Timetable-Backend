@@ -17,6 +17,7 @@ import (
 	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/db"
+	"github.com/rs/cors"
 )
 
 var database db.Database
@@ -40,10 +41,17 @@ func initServer() {
 
 	// get an `http.Handler` that we can use
 	h := gen.HandlerFromMux(server, r)
+	handler := cors.New(cors.Options{
+		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions, http.MethodPut},
+		Logger:         log.Default(),
+		Debug:          true,
+		AllowedHeaders: []string{"*"},
+	}).Handler(h)
 
 	s := &http.Server{
-		Handler: h,
-		Addr:    "0.0.0.0:8080",
+		Handler:                      handler,
+		Addr:                         "0.0.0.0:8080",
+		DisableGeneralOptionsHandler: true,
 	}
 
 	// // And we serve HTTP until the world ends.
