@@ -16,7 +16,7 @@ import (
 func (database *Database) FetchMenuForDate(startDate time.Time, days int, ctx context.Context) ([]gen.Menu, error) {
 
 	// Calculate the end date by adding 'days - 1' to startDate
-	endDate := startDate.AddDate(0, 0, days-1)
+	endDate := startDate.AddDate(0, 0, days)
 
 	var dbMenus []dbModels.Menu
 	err := database.DB.NewSelect().
@@ -53,11 +53,6 @@ func (database *Database) FetchMenuForDate(startDate time.Time, days int, ctx co
 		_, err = database.DB.NewInsert().
 			Model(&menus).
 			On("CONFLICT (date) DO UPDATE").
-			Set("cookteam = EXCLUDED.cookteam").
-			Set("main_dish = EXCLUDED.main_dish").
-			Set("main_dish_veg = EXCLUDED.main_dish_veg").
-			Set("garnish = EXCLUDED.garnish").
-			Set("dessert = EXCLUDED.dessert").
 			Exec(ctx)
 		if err != nil {
 			log.Println("Error upserting menus:", err)

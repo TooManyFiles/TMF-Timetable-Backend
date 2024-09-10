@@ -57,7 +57,7 @@ func (server Server) isLoggedIn(w http.ResponseWriter, r *http.Request) (gen.Use
 					return gen.User{}, dbModels.ErrInvalidToken
 				} else {
 					if w != nil {
-						http.Error(w, "Malformed Authorization", http.StatusBadRequest)
+						http.Error(w, "Malformed Authorization", http.StatusUnauthorized)
 					}
 					return gen.User{}, dbModels.ErrInvalidToken
 				}
@@ -68,7 +68,7 @@ func (server Server) isLoggedIn(w http.ResponseWriter, r *http.Request) (gen.Use
 		return user, nil
 	}
 	if w != nil {
-		http.Error(w, "Malformed Authorization", http.StatusBadRequest)
+		http.Error(w, "Malformed Authorization", http.StatusUnauthorized)
 	}
 	return gen.User{}, dbModels.ErrInvalidToken
 }

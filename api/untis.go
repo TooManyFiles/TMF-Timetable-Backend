@@ -12,10 +12,11 @@ func (server Server) GetUntisClasses(w http.ResponseWriter, r *http.Request) {
 	}
 	classes, err := server.DB.GetClasses(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	http.Error(w, "Internal server error.", http.StatusInternalServerError)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(classes)
 }
@@ -27,10 +28,11 @@ func (server Server) GetUntisRooms(w http.ResponseWriter, r *http.Request) {
 	}
 	rooms, err := server.DB.GetRooms(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	http.Error(w, "Internal server error.", http.StatusInternalServerError)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(rooms)
 }

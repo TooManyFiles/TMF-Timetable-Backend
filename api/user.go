@@ -16,7 +16,10 @@ import (
 // (GET /users)
 func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	var resp []gen.User
-
+	w.Header().Set("Access-Control-Allow-Origin", "docs.api.admin.toomanyfiles.dev") // Allows all origins, change "*" to specific domain if needed
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	log.Println("aa")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
 }

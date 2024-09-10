@@ -53,8 +53,8 @@ func (database *Database) CreateSession(body gen.PostLoginJSONBody, cxt context.
 	var user dbModels.User
 	query := database.DB.NewSelect()
 	query.Model(&user)
-	query.Where("email = ?", body.Email)
-	query.Relation("Choice")
+	query.Where("\"user\".\"email\" = ?", body.Email)
+	query.Relation("DefaultChoice")
 	err := query.Scan(cxt) //sql.ErrNoRows
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -150,8 +150,8 @@ func (database *Database) verifySession(tokenString string, cxt context.Context)
 	var user dbModels.User
 	query := database.DB.NewSelect()
 	query.Model(&user)
-	query.Where("id = ?", claims.UserId)
-	query.Relation("Choice")
+	query.Where("\"user\".\"id\" = ?", claims.UserId)
+	query.Relation("DefaultChoice")
 	err = query.Scan(cxt) //sql.ErrNoRows
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

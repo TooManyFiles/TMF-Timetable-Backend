@@ -129,8 +129,8 @@ func (api *TFfoodplanAPI) GetForRange(startDate time.Time, dataCount int) ([]dbM
 		menus = append(menus, menu)
 		receivedDates[menuDate] = true
 	}
-
-	endDate := startDate.AddDate(0, 0, dataCount-1)
+	startDate = startDate.UTC().Truncate(24 * time.Hour)
+	endDate := startDate.AddDate(0, 0, dataCount)
 	// Identify and create skipped dates
 	for currentDate := startDate; !currentDate.After(endDate); currentDate = currentDate.AddDate(0, 0, 1) {
 		if !receivedDates[currentDate] {

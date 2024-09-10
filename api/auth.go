@@ -30,7 +30,7 @@ func (server Server) PostLogin(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, dbModels.ErrUserNotFound) || errors.Is(err, dbModels.ErrInvalidPassword) {
 			http.Error(w, "Wrong credentials!", http.StatusUnauthorized)
 		} else {
-			http.Error(w, "Internal server error.", http.StatusInternalServerError)
+			http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
