@@ -10,9 +10,10 @@ import (
 	"github.com/uptrace/bun"
 )
 
-var ErrPasswordNotMachRequirements = errors.New("crypto: Password dose not match the requirements.")
-var ErrUserNotFound = errors.New("db: User not found.")
-var ErrInvalidPassword = errors.New("db: The Password is wrong.")
+var ErrPasswordNotMachRequirements = errors.New("crypto: Password dose not match the requirements")
+var ErrUserNotFound = errors.New("db: User not found")
+var ErrInvalidPassword = errors.New("db: The Password is wrong")
+var ErrInvalidToken = errors.New("db: The Token is invalid")
 
 // Class model
 type Class struct {

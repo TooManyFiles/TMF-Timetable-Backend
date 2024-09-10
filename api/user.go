@@ -8,7 +8,6 @@ import (
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -93,47 +92,11 @@ func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, user
 // Returns currently logged in user.
 // (GET /currentUser)
 func (server Server) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if token[:7] == "Bearer " {
-		token = token[7:]
-		user, err := server.DB.VerifySession(token, r.Context())
-		if err != nil {
-			if errors.Is(err, dbModels.ErrInvalidPassword) || errors.Is(err, dbModels.ErrUserNotFound) {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
-				return
-			}
-
-			var jwterr *jwt.ValidationError
-			if errors.As(err, &jwterr) {
-				errCode := jwterr.Errors
-				// Group 1: Malformed, Unverifiable, Signature Invalid
-				if errCode&jwt.ValidationErrorMalformed != 0 ||
-					errCode&jwt.ValidationErrorUnverifiable != 0 ||
-					errCode&jwt.ValidationErrorSignatureInvalid != 0 {
-					http.Error(w, "Token malformed or Signature Invalid.", http.StatusBadRequest)
-					return
-				} else if errCode&jwt.ValidationErrorExpired != 0 ||
-					errCode&jwt.ValidationErrorNotValidYet != 0 {
-					http.Error(w, "Token currently not Valid.", http.StatusUnauthorized)
-					return
-				} else if errCode&jwt.ValidationErrorId != 0 ||
-					errCode&jwt.ValidationErrorIssuedAt != 0 ||
-					errCode&jwt.ValidationErrorIssuer != 0 ||
-					errCode&jwt.ValidationErrorClaimsInvalid != 0 {
-					http.Error(w, "Invalid token", http.StatusUnauthorized)
-					return
-				} else {
-					http.Error(w, "Malformed Authorization", http.StatusBadRequest)
-				}
-			}
-			http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(user)
+	user, err := server.isLoggedIn(w, r)
+	if err != nil {
 		return
 	}
-	http.Error(w, "Malformed Authorization", http.StatusBadRequest)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(user)
 }
