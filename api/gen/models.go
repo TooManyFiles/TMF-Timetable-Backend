@@ -13,17 +13,32 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Defines values for LessonLessonType.
+const (
+	Bs LessonLessonType = "bs"
+	Ex LessonLessonType = "ex"
+	Ls LessonLessonType = "ls"
+	Oh LessonLessonType = "oh"
+	Sb LessonLessonType = "sb"
+)
+
 // Defines values for UserRole.
 const (
-	Admin   UserRole = "admin"
-	Student UserRole = "student"
-	Teacher UserRole = "teacher"
+	UserRoleAdmin   UserRole = "admin"
+	UserRoleStudent UserRole = "student"
+	UserRoleTeacher UserRole = "teacher"
+)
+
+// Defines values for PutViewJSONBodyProvider.
+const (
+	PutViewJSONBodyProviderCafeteria PutViewJSONBodyProvider = "cafeteria"
+	PutViewJSONBodyProviderUntis     PutViewJSONBodyProvider = "untis"
 )
 
 // Defines values for PutViewUserUserIdJSONBodyProvider.
 const (
-	Cafeteria PutViewUserUserIdJSONBodyProvider = "cafeteria"
-	Untis     PutViewUserUserIdJSONBodyProvider = "untis"
+	PutViewUserUserIdJSONBodyProviderCafeteria PutViewUserUserIdJSONBodyProvider = "cafeteria"
+	PutViewUserUserIdJSONBodyProviderUntis     PutViewUserUserIdJSONBodyProvider = "untis"
 )
 
 // Choice Choice of subjects for the classes. {class:[subjects]}
@@ -37,26 +52,70 @@ type Choice struct {
 	UserId *int                    `json:"userId,omitempty"`
 }
 
+// Class defines model for Class.
+type Class struct {
+	Id                     *int    `json:"id,omitempty"`
+	MainClassLeaderID      *int    `json:"mainClassLeaderID,omitempty"`
+	MainTeacherId          *int    `json:"mainTeacherId,omitempty"`
+	Name                   *string `json:"name,omitempty"`
+	SecondaryClassLeaderID *int    `json:"secondaryClassLeaderID,omitempty"`
+	SecondaryTeacherId     *int    `json:"secondaryTeacherId,omitempty"`
+}
+
 // Lesson defines model for Lesson.
 type Lesson struct {
-	Classes    *[]int     `json:"classes,omitempty"`
-	EndTime    *time.Time `json:"endTime,omitempty"`
-	Id         *string    `json:"id,omitempty"`
-	LastUpdate *time.Time `json:"lastUpdate,omitempty"`
-	Rooms      *[]int     `json:"rooms,omitempty"`
-	StartTime  *time.Time `json:"startTime,omitempty"`
-	Subjects   *[]int     `json:"subjects,omitempty"`
-	Teachers   *[]int     `json:"teachers,omitempty"`
+	AdditionalInformation *string    `json:"additionalInformation,omitempty"`
+	Cancelled             *bool      `json:"cancelled,omitempty"`
+	Classes               *[]int     `json:"classes,omitempty"`
+	EndTime               time.Time  `json:"endTime"`
+	Homework              *string    `json:"homework,omitempty"`
+	Id                    *int       `json:"id,omitempty"`
+	Irregular             *bool      `json:"irregular,omitempty"`
+	LastUpdate            *time.Time `json:"lastUpdate,omitempty"`
+
+	// LessonType //„ls“ (lesson) | „oh“ (office hour) | „sb“ (standby) | „bs“ (break supervision) | „ex“(examination)  omitted if lesson
+	LessonType LessonLessonType `json:"lessonType"`
+	Rooms      *[]int           `json:"rooms,omitempty"`
+	StartTime  time.Time        `json:"startTime"`
+	Subjects   *[]int           `json:"subjects,omitempty"`
+	Teachers   *[]int           `json:"teachers,omitempty"`
 }
+
+// LessonLessonType //„ls“ (lesson) | „oh“ (office hour) | „sb“ (standby) | „bs“ (break supervision) | „ex“(examination)  omitted if lesson
+type LessonLessonType string
 
 // Menu defines model for Menu.
 type Menu struct {
-	Cookteam    *string             `json:"cookteam,omitempty"`
-	Date        *openapi_types.Date `json:"date,omitempty"`
-	Dessert     *string             `json:"dessert,omitempty"`
-	Garnish     *string             `json:"garnish,omitempty"`
-	MainDish    *string             `json:"mainDish,omitempty"`
-	MainDishVeg *string             `json:"mainDishVeg,omitempty"`
+	Cookteam    *string            `json:"cookteam,omitempty"`
+	Date        openapi_types.Date `json:"date"`
+	Dessert     *string            `json:"dessert,omitempty"`
+	Garnish     *string            `json:"garnish,omitempty"`
+	MainDish    *string            `json:"mainDish,omitempty"`
+	MainDishVeg *string            `json:"mainDishVeg,omitempty"`
+}
+
+// Room defines model for Room.
+type Room struct {
+	AdditionalInformation *string `json:"additionalInformation,omitempty"`
+	Id                    *int    `json:"id,omitempty"`
+	Name                  *string `json:"name,omitempty"`
+}
+
+// Subject defines model for Subject.
+type Subject struct {
+	Id        *int    `json:"id,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	ShortName *string `json:"shortName,omitempty"`
+}
+
+// Teacher defines model for Teacher.
+type Teacher struct {
+	FirstName *string `json:"firstName,omitempty"`
+	Id        *int    `json:"id,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	Pronoun   *string `json:"pronoun,omitempty"`
+	Title     *string `json:"title,omitempty"`
+	UserId    *int    `json:"userId,omitempty"`
 }
 
 // User defines model for User.
@@ -93,10 +152,14 @@ type PostLoginJSONBody struct {
 
 // PutViewJSONBody defines parameters for PutView.
 type PutViewJSONBody struct {
-	Classes  *[]int `json:"classes,omitempty"`
-	Rooms    *[]int `json:"rooms,omitempty"`
-	Subjects *[]int `json:"subjects,omitempty"`
-	Teachers *[]int `json:"teachers,omitempty"`
+	Provider []PutViewJSONBodyProvider `json:"provider"`
+	Untis    *struct {
+		// Choice Choice of subjects for the classes. {class:[subjects]}
+		// - If a class has a empty array as a choice all subjects should be shown.
+		// - If the Class ID is negative it the the choice is a blacklist.
+		// - If a Class ID is present as a negative as well as a positive value only the positive should be used.
+		Choice *Choice `json:"Choice,omitempty"`
+	} `json:"untis,omitempty"`
 }
 
 // PutViewParams defines parameters for PutView.
@@ -105,18 +168,19 @@ type PutViewParams struct {
 	Duration *int                `form:"duration,omitempty" json:"duration,omitempty"`
 }
 
+// PutViewJSONBodyProvider defines parameters for PutView.
+type PutViewJSONBodyProvider string
+
 // PutViewUserUserIdJSONBody defines parameters for PutViewUserUserId.
 type PutViewUserUserIdJSONBody struct {
-	Classes *[]int `json:"classes,omitempty"`
-
-	// CustomChoice Choice of subjects for the classes. {class:[subjects]}
-	// - If a class has a empty array as a choice all subjects should be shown.
-	// - If the Class ID is negative it the the choice is a blacklist.
-	// - If a Class ID is present as a negative as well as a positive value only the positive should be used.
-	CustomChoice *Choice                              `json:"customChoice,omitempty"`
-	Provider     *[]PutViewUserUserIdJSONBodyProvider `json:"provider,omitempty"`
-	Subjects     *[]int                               `json:"subjects,omitempty"`
-	Teachers     *[]int                               `json:"teachers,omitempty"`
+	Provider []PutViewUserUserIdJSONBodyProvider `json:"provider"`
+	Untis    *struct {
+		// Choice Choice of subjects for the classes. {class:[subjects]}
+		// - If a class has a empty array as a choice all subjects should be shown.
+		// - If the Class ID is negative it the the choice is a blacklist.
+		// - If a Class ID is present as a negative as well as a positive value only the positive should be used.
+		Choice *Choice `json:"Choice,omitempty"`
+	} `json:"untis,omitempty"`
 }
 
 // PutViewUserUserIdParams defines parameters for PutViewUserUserId.

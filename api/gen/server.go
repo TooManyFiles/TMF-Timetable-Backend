@@ -35,13 +35,13 @@ type ServerInterface interface {
 	PostUsers(w http.ResponseWriter, r *http.Request)
 	// Delete a user by ID
 	// (DELETE /users/{userId})
-	DeleteUsersUserId(w http.ResponseWriter, r *http.Request, userId string)
+	DeleteUsersUserId(w http.ResponseWriter, r *http.Request, userId int)
 	// Get a user by ID
 	// (GET /users/{userId})
-	GetUsersUserId(w http.ResponseWriter, r *http.Request, userId string)
+	GetUsersUserId(w http.ResponseWriter, r *http.Request, userId int)
 	// Update a user by ID
 	// (PUT /users/{userId})
-	PutUsersUserId(w http.ResponseWriter, r *http.Request, userId string)
+	PutUsersUserId(w http.ResponseWriter, r *http.Request, userId int)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -179,7 +179,7 @@ func (siw *ServerInterfaceWrapper) DeleteUsersUserId(w http.ResponseWriter, r *h
 	var err error
 
 	// ------------- Path parameter "userId" -------------
-	var userId string
+	var userId int
 
 	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -207,7 +207,7 @@ func (siw *ServerInterfaceWrapper) GetUsersUserId(w http.ResponseWriter, r *http
 	var err error
 
 	// ------------- Path parameter "userId" -------------
-	var userId string
+	var userId int
 
 	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -235,7 +235,7 @@ func (siw *ServerInterfaceWrapper) PutUsersUserId(w http.ResponseWriter, r *http
 	var err error
 
 	// ------------- Path parameter "userId" -------------
-	var userId string
+	var userId int
 
 	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {

@@ -70,7 +70,7 @@ func (database *Database) FetchMenuForDate(startDate time.Time, days int, ctx co
 	for i, dbMenu := range dbMenus {
 		menus[i] = gen.Menu{
 			Cookteam:    &dbMenu.Cookteam,
-			Date:        &openapi_types.Date{Time: dbMenu.Date},
+			Date:        openapi_types.Date{Time: dbMenu.Date},
 			Dessert:     &dbMenu.Dessert,
 			Garnish:     &dbMenu.Garnish,
 			MainDish:    &dbMenu.MainDish,

@@ -65,7 +65,7 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 
 // Delete a user by ID
 // (DELETE /users/{userId})
-func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, userId string) {
+func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
 	var resp []gen.User
 
 	w.WriteHeader(http.StatusOK)
@@ -74,7 +74,7 @@ func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, u
 
 // Get a user by ID
 // (GET /users/{userId})
-func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, userId string) {
+func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
 	var resp []gen.User
 
 	w.WriteHeader(http.StatusOK)
@@ -83,7 +83,7 @@ func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, user
 
 // Update a user by ID
 // (PUT /users/{userId})
-func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, userId string) {
+func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
 	var resp []gen.User
 
 	w.WriteHeader(http.StatusOK)
