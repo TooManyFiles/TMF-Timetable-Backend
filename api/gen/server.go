@@ -27,6 +27,18 @@ type ServerInterface interface {
 	// Logout and invalidate token
 	// (POST /logout)
 	PostLogout(w http.ResponseWriter, r *http.Request)
+	// Get all classes
+	// (GET /untis/classes)
+	GetUntisClasses(w http.ResponseWriter, r *http.Request)
+	// Get all rooms
+	// (GET /untis/rooms)
+	GetUntisRooms(w http.ResponseWriter, r *http.Request)
+	// Get all subjects
+	// (GET /untis/subjects)
+	GetUntisSubjects(w http.ResponseWriter, r *http.Request)
+	// Get all teachers
+	// (GET /untis/teachers)
+	GetUntisTeachers(w http.ResponseWriter, r *http.Request)
 	// Get all users
 	// (GET /users)
 	GetUsers(w http.ResponseWriter, r *http.Request)
@@ -129,6 +141,74 @@ func (siw *ServerInterfaceWrapper) PostLogout(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostLogout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetUntisClasses operation middleware
+func (siw *ServerInterfaceWrapper) GetUntisClasses(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUntisClasses(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetUntisRooms operation middleware
+func (siw *ServerInterfaceWrapper) GetUntisRooms(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUntisRooms(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetUntisSubjects operation middleware
+func (siw *ServerInterfaceWrapper) GetUntisSubjects(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUntisSubjects(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetUntisTeachers operation middleware
+func (siw *ServerInterfaceWrapper) GetUntisTeachers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUntisTeachers(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -374,6 +454,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("GET "+options.BaseURL+"/currentUser", wrapper.GetCurrentUser)
 	m.HandleFunc("POST "+options.BaseURL+"/login", wrapper.PostLogin)
 	m.HandleFunc("POST "+options.BaseURL+"/logout", wrapper.PostLogout)
+	m.HandleFunc("GET "+options.BaseURL+"/untis/classes", wrapper.GetUntisClasses)
+	m.HandleFunc("GET "+options.BaseURL+"/untis/rooms", wrapper.GetUntisRooms)
+	m.HandleFunc("GET "+options.BaseURL+"/untis/subjects", wrapper.GetUntisSubjects)
+	m.HandleFunc("GET "+options.BaseURL+"/untis/teachers", wrapper.GetUntisTeachers)
 	m.HandleFunc("GET "+options.BaseURL+"/users", wrapper.GetUsers)
 	m.HandleFunc("POST "+options.BaseURL+"/users", wrapper.PostUsers)
 	m.HandleFunc("DELETE "+options.BaseURL+"/users/{userId}", wrapper.DeleteUsersUserId)

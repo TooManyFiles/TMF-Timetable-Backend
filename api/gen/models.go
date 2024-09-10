@@ -55,10 +55,10 @@ type Choice struct {
 // Class defines model for Class.
 type Class struct {
 	Id                     *int    `json:"id,omitempty"`
-	MainClassLeaderID      *int    `json:"mainClassLeaderID,omitempty"`
+	MainClassLeaderId      *int    `json:"mainClassLeaderId,omitempty"`
 	MainTeacherId          *int    `json:"mainTeacherId,omitempty"`
 	Name                   *string `json:"name,omitempty"`
-	SecondaryClassLeaderID *int    `json:"secondaryClassLeaderID,omitempty"`
+	SecondaryClassLeaderId *int    `json:"secondaryClassLeaderId,omitempty"`
 	SecondaryTeacherId     *int    `json:"secondaryTeacherId,omitempty"`
 }
 

@@ -21,13 +21,48 @@ type Class struct {
 	Name                   string `bun:"name"`
 	MainTeacherId          int    `bun:"mainTeacherId"`
 	SecondaryTeacherId     int    `bun:"secondaryTeacherId"`
-	MainClassleaderId      int    `bun:"mainClassleader"`
-	SecondaryClassleaderId int    `bun:"secondaryClassleader"`
+	MainClassLeaderId      int    `bun:"mainClassleader"`
+	SecondaryClassLeaderId int    `bun:"secondaryClassleader"`
 
 	MainTeacher          *Teacher `bun:"rel:belongs-to,join:mainTeacherId=id"`
 	SecondaryTeacher     *Teacher `bun:"rel:belongs-to,join:secondaryTeacherId=id"`
 	MainClassleader      *User    `bun:"rel:belongs-to,join:mainClassleader=id"`
 	SecondaryClassleader *User    `bun:"rel:belongs-to,join:secondaryClassleader=id"`
+}
+
+func (class *Class) ToGen() gen.Class {
+	return gen.Class{
+		Id:                     &class.Id,
+		Name:                   &class.Name,
+		MainTeacherId:          &class.MainTeacherId,
+		SecondaryTeacherId:     &class.SecondaryTeacherId,
+		MainClassLeaderId:      &class.MainClassLeaderId,
+		SecondaryClassLeaderId: &class.SecondaryClassLeaderId,
+	}
+}
+func (class *Class) FromGen(genClass gen.Class) Class {
+	if class == nil {
+		class = &Class{}
+	}
+	if genClass.Id != nil {
+		class.Id = int(*genClass.Id)
+	}
+	if *genClass.Name != "" {
+		class.Name = *genClass.Name
+	}
+	if genClass.MainTeacherId != nil {
+		class.MainTeacherId = *genClass.MainTeacherId
+	}
+	if genClass.SecondaryTeacherId != nil {
+		class.SecondaryTeacherId = *genClass.SecondaryTeacherId
+	}
+	if genClass.MainClassLeaderId != nil {
+		class.MainClassLeaderId = *genClass.MainClassLeaderId
+	}
+	if genClass.MainClassLeaderId != nil {
+		class.SecondaryClassLeaderId = *genClass.MainClassLeaderId
+	}
+	return *class
 }
 
 // User model
@@ -103,6 +138,41 @@ type Teacher struct {
 	User          *User `bun:"rel:belongs-to,join:userId=id"`
 }
 
+func (teacher *Teacher) ToGen() gen.Teacher {
+	return gen.Teacher{
+		Id:        &teacher.Id,
+		UserId:    &teacher.UserId,
+		Name:      &teacher.Name,
+		FirstName: &teacher.FirstName,
+		Pronoun:   &teacher.Pronoun,
+		Title:     &teacher.Title,
+	}
+}
+func (teacher *Teacher) FromGen(genTeacher gen.Teacher) Teacher {
+	if teacher == nil {
+		teacher = &Teacher{}
+	}
+	if genTeacher.Id != nil {
+		teacher.Id = int(*genTeacher.Id)
+	}
+	if genTeacher.UserId != nil {
+		teacher.UserId = *genTeacher.UserId
+	}
+	if *genTeacher.Name != "" {
+		teacher.Name = *genTeacher.Name
+	}
+	if *genTeacher.FirstName != "" {
+		teacher.FirstName = *genTeacher.FirstName
+	}
+	if *genTeacher.Pronoun != "" {
+		teacher.Pronoun = *genTeacher.Pronoun
+	}
+	if *genTeacher.Title != "" {
+		teacher.Title = *genTeacher.Title
+	}
+	return *teacher
+}
+
 // Lesson model
 type Lesson struct {
 	bun.BaseModel `bun:"table:lesson"`
@@ -124,12 +194,61 @@ type Room struct {
 	AdditionalInformation string
 }
 
+func (room *Room) ToGen() gen.Room {
+	return gen.Room{
+		Id:                    &room.Id,
+		Name:                  &room.Name,
+		AdditionalInformation: &room.AdditionalInformation,
+	}
+}
+func (room *Room) FromGen(genRoom gen.Room) Room {
+	if room == nil {
+		room = &Room{}
+	}
+	if genRoom.Id != nil {
+		room.Id = int(*genRoom.Id)
+	}
+	if *genRoom.Name != "" {
+		room.Name = *genRoom.Name
+	}
+	if *genRoom.AdditionalInformation != "" {
+		room.AdditionalInformation = *genRoom.AdditionalInformation
+	}
+
+	return *room
+}
+
 // Subject model
 type Subject struct {
 	bun.BaseModel `bun:"table:subject"`
 	Id            int `bun:"id,pk,autoincrement,notnull"`
 	Name          string
+	ShortName     string
 }
+
+func (subject *Subject) ToGen() gen.Subject {
+	return gen.Subject{
+		Id:        &subject.Id,
+		Name:      &subject.Name,
+		ShortName: &subject.ShortName,
+	}
+}
+func (subject *Subject) FromGen(genSubject gen.Subject) Subject {
+	if subject == nil {
+		subject = &Subject{}
+	}
+	if genSubject.Id != nil {
+		subject.Id = int(*genSubject.Id)
+	}
+	if *genSubject.Name != "" {
+		subject.Name = *genSubject.Name
+	}
+	if *genSubject.ShortName != "" {
+		subject.ShortName = *genSubject.ShortName
+	}
+	return *subject
+}
+
 type Choice struct {
 	bun.BaseModel `bun:"table:choice"`
 	Id            int `bun:"id,pk,autoincrement,notnull"`
