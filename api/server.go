@@ -23,7 +23,7 @@ func NewServer(DB db.Database) Server {
 }
 func (server Server) isLoggedIn(w http.ResponseWriter, r *http.Request) (gen.User, error) {
 	token := r.Header.Get("Authorization")
-	if token[:7] == "Bearer " {
+	if len(token) > 7 && token[:7] == "Bearer " {
 		token = token[7:]
 		user, err := server.DB.VerifySession(token, r.Context())
 		if err != nil {
