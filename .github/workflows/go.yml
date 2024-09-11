@@ -34,10 +34,10 @@ jobs:
 
         GOARCH=${{ matrix.arch }}
 
-        # Create the build directory
-        mkdir -p build/${GOOS}-${GOARCH}
-
-        # Build the project
+        # Create the build directory if it does not exist
+        mkdir -p build/${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' }}/${{ matrix.arch }}/tmf-timetable-backend
+          
+        # Build the project, ensuring to output a file in the correct directory
         go build -v -o build/${GOOS}-${GOARCH}/tmf-timetable-backend ./...
 
     - name: Test
@@ -47,4 +47,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: tmf-timetable-backend-${{ matrix.os }}-${{ matrix.arch }}
-        path: build/${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' }}/${{ matrix.arch }}
+        path: build/${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' }}/${{ matrix.arch }}/tmf-timetable-backend
