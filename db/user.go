@@ -55,3 +55,50 @@ func (database *Database) CreateUser(user gen.User, pwd string, ctx context.Cont
 	dbUser.DefaultChoice.FromGen(createdChoice)
 	return dbUser.ToGen(), nil
 }
+func (database *Database) GetUserByID(id int, ctx context.Context) (gen.User, error) {
+	var user dbModels.User
+	query := database.DB.NewSelect()
+	query.Model(&user)
+	query.Where("\"user\".\"id\" = ?", id)
+	query.Relation("DefaultChoice")
+	err := query.Scan(ctx) //sql.ErrNoRows
+	if err != nil {
+		return gen.User{}, err
+	}
+	return user.ToGen(), nil
+
+}
+func (database *Database) DeleteUserByID(id int, ctx context.Context) error {
+	var user dbModels.User
+	query := database.DB.NewDelete()
+	query.Model(&user)
+	query.Where("\"user\".\"id\" = ?", id)
+	_, err := query.Exec(ctx) //sql.ErrNoRows
+	if err != nil {
+		return err
+	}
+	var choice dbModels.Choice
+	query = database.DB.NewDelete()
+	query.Model(&choice)
+	query.Where("\"choice\".\"userId\" = ?", id)
+	_, err = query.Exec(ctx) //sql.ErrNoRows
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+func (database *Database) GetUsers(ctx context.Context) ([]gen.User, error) {
+	var users []dbModels.User
+	query := database.DB.NewDelete()
+	query.Model(&users)
+	err := query.Scan(ctx) //sql.ErrNoRows
+	if err != nil {
+		return []gen.User{}, err
+	}
+	genUsers := make([]gen.User, len(users))
+	for i, s := range users {
+		genUsers[i] = s.ToGen()
+	}
+	return genUsers, err
+}

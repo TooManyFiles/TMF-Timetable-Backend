@@ -16,10 +16,11 @@ import (
 // (GET /users)
 func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	var resp []gen.User
-	w.Header().Set("Access-Control-Allow-Origin", "docs.api.admin.toomanyfiles.dev") // Allows all origins, change "*" to specific domain if needed
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	log.Println("aa")
+	resp, err := server.DB.GetUsers(r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
 }
@@ -68,17 +69,23 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 // Delete a user by ID
 // (DELETE /users/{userId})
 func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
-	var resp []gen.User
-
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(resp)
+	err := server.DB.DeleteUserByID(userId, r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // Get a user by ID
 // (GET /users/{userId})
 func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
-	var resp []gen.User
-
+	resp, err := server.DB.GetUserByID(userId, r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
 }
