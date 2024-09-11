@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ] # Multiple OS platforms
+        os: [ ubuntu-latest, windows-latest] # Multiple OS platforms
         arch: [ amd64 ] # Architecture
 
     steps:
@@ -38,6 +38,8 @@ jobs:
         fi
 
         GOARCH=${{ matrix.arch }}
+
+        echo  "Building for $GOOS $GOARCH"
 
         # Create the build directory if it does not exist
         mkdir -p build/${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' }}/${{ matrix.arch }}/tmf-timetable-backend
