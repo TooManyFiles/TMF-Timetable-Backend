@@ -26,11 +26,16 @@ jobs:
     - name: Build the project
       run: |
         # Determine GOOS based on matrix OS
-        case ${{ matrix.os }} in
-          ubuntu-latest) GOOS=linux ;;
-          windows-latest) GOOS=windows ;;
-          macos-latest) GOOS=darwin ;;
-        esac
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          GOOS=linux
+        elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+          GOOS=windows
+        elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+          GOOS=darwin
+        else
+          echo "Unsupported OS"
+          exit 1
+        fi
 
         GOARCH=${{ matrix.arch }}
 
