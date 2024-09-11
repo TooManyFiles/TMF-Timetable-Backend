@@ -25,16 +25,18 @@ jobs:
 
     - name: Build the project
       run: |
-        # Set the GOOS and GOARCH based on matrix values
-        case ${{ matrix.os }} in
-          ubuntu-latest) GOOS=linux ;;
-          windows-latest) GOOS=windows ;;
-          macos-latest) GOOS=darwin ;;
-        esac
-        
+        # Determine GOOS based on matrix OS
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          GOOS=linux
+        elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+          GOOS=windows
+        elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+          GOOS=darwin
+        fi
+
         GOARCH=${{ matrix.arch }}
 
-        # Create directory and build
+        # Create the build directory and build the project
         mkdir -p build/${GOOS}-${GOARCH}
         go build -v -o build/${GOOS}-${GOARCH}/myapp ./...
 
@@ -44,5 +46,5 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: myapp-${{ matrix.os }}-${{ matrix.arch }}
-        path: build/${{ matrix.os | cut -d'-' -f1 }}-${{ matrix.arch }}/
+        name: tmf-timetable-backend-${{ matrix.os }}-${{ matrix.arch }}
+        path: build/${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' }}/${{ matrix.arch }}
