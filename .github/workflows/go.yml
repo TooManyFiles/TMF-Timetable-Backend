@@ -26,19 +26,19 @@ jobs:
     - name: Build the project
       run: |
         # Determine GOOS based on matrix OS
-        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          GOOS=linux
-        elif [ "${{ matrix.os }}" = "windows-latest" ]; then
-          GOOS=windows
-        elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-          GOOS=darwin
-        fi
+        case ${{ matrix.os }} in
+          ubuntu-latest) GOOS=linux ;;
+          windows-latest) GOOS=windows ;;
+          macos-latest) GOOS=darwin ;;
+        esac
 
         GOARCH=${{ matrix.arch }}
 
-        # Create the build directory and build the project
+        # Create the build directory
         mkdir -p build/${GOOS}-${GOARCH}
-        go build -v -o build/${GOOS}-${GOARCH}/myapp ./...
+
+        # Build the project
+        go build -v -o build/${GOOS}-${GOARCH}/tmf-timetable-backend ./...
 
     - name: Test
       run: go test -v ./...
