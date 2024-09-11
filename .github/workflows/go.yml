@@ -13,13 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ] # Multiple OS platforms
-        include:
-          - os: ubuntu-latest
-            arch: amd64
-          - os: windows-latest
-            arch: amd64
-          - os: macos-latest
-            arch: amd64
+        arch: [ amd64 ] # Architecture
 
     steps:
     - uses: actions/checkout@v4
@@ -31,9 +25,17 @@ jobs:
 
     - name: Build the project
       run: |
-        GOOS=${{ matrix.os | cut -d'-' -f1 }} \
-        GOARCH=${{ matrix.arch }} \
-        mkdir -p build/${GOOS}-${GOARCH} \
+        # Set the GOOS and GOARCH based on matrix values
+        case ${{ matrix.os }} in
+          ubuntu-latest) GOOS=linux ;;
+          windows-latest) GOOS=windows ;;
+          macos-latest) GOOS=darwin ;;
+        esac
+        
+        GOARCH=${{ matrix.arch }}
+
+        # Create directory and build
+        mkdir -p build/${GOOS}-${GOARCH}
         go build -v -o build/${GOOS}-${GOARCH}/myapp ./...
 
     - name: Test
