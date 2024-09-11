@@ -10,13 +10,11 @@ import (
 	"time"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// Replace this with your own secret key
-var jwtSecretKey = []byte("your_secret_key")
 
 // Claims represents the JWT claims
 type Claims struct {
@@ -96,7 +94,7 @@ func generateSessionToken(user dbModels.User, expirationTime time.Time) (string,
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign the token with the secret key
-	tokenString, err := token.SignedString(jwtSecretKey)
+	tokenString, err := token.SignedString([]byte(config.Config.Crypto.JwtSecretKey))
 	if err != nil {
 		return "", err
 	}
@@ -125,7 +123,7 @@ func unpackToken(tokenString string) (*Claims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return jwtSecretKey, nil
+		return []byte(config.Config.Crypto.JwtSecretKey), nil
 	})
 
 	if err != nil {

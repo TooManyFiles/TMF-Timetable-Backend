@@ -23,6 +23,10 @@ import (
 var database db.Database
 
 func main() {
+	err := config.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
 	dataCollectors.InitDataCollectors()
 	initDB()
 	initServer()
@@ -30,7 +34,7 @@ func main() {
 }
 
 func initDB() {
-	database = db.NewDatabase(config.DatabaseConfig)
+	database = db.NewDatabase(config.Config.DatabaseConfig)
 }
 
 func initServer() {

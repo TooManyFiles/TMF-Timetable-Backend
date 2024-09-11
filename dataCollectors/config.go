@@ -1,6 +1,9 @@
 package dataCollectors
 
-import tffoodplanapi "github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors/TFfoodplanAPI"
+import (
+	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
+	tffoodplanapi "github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors/TFfoodplanAPI"
+)
 
 var DataCollectors DataCollectorsStruct
 
@@ -10,6 +13,6 @@ type DataCollectorsStruct struct {
 
 func InitDataCollectors() {
 	DataCollectors.TFfoodplanAPI = tffoodplanapi.TFfoodplanAPI{
-		URL: "http://www.treffpunkt-fanny.de/images/stories/dokumente/Essensplaene/api/TFfoodplanAPI.php",
+		URL: config.Config.DataCollectors.TFfoodplanAPIURL,
 	}
 }

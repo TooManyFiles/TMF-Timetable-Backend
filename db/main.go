@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -12,20 +13,16 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 )
 
-type DatabaseConfig struct {
-	PG pgdriver.Option
-}
 type Database struct {
-	DatabaseConfig
+	config.DatabaseConfig
 	DB *bun.DB
 }
 
-func NewDatabase(config DatabaseConfig) Database {
+func NewDatabase(config config.DatabaseConfig) Database {
 	database := Database{DatabaseConfig: config}
 	ctx := context.Background()
-
 	// Open a PostgreSQL database.
-	pgdb := sql.OpenDB(pgdriver.NewConnector(database.PG))
+	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(database.Connection)))
 
 	// Create a Bun db on top of it.
 	database.DB = bun.NewDB(pgdb, pgdialect.New())
