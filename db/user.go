@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
@@ -62,7 +64,11 @@ func (database *Database) GetUserByID(id int, ctx context.Context) (gen.User, er
 	query.Where("\"user\".\"id\" = ?", id)
 	query.Relation("DefaultChoice")
 	err := query.Scan(ctx) //sql.ErrNoRows
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return gen.User{}, dbModels.ErrUserNotFound
+		}
 		return gen.User{}, err
 	}
 	return user.ToGen(), nil
@@ -90,7 +96,7 @@ func (database *Database) DeleteUserByID(id int, ctx context.Context) error {
 }
 func (database *Database) GetUsers(ctx context.Context) ([]gen.User, error) {
 	var users []dbModels.User
-	query := database.DB.NewDelete()
+	query := database.DB.NewSelect()
 	query.Model(&users)
 	err := query.Scan(ctx) //sql.ErrNoRows
 	if err != nil {

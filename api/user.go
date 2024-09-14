@@ -19,8 +19,10 @@ func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	resp, err := server.DB.GetUsers(r.Context())
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		log.Print(err.Error())
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
 }
@@ -28,18 +30,15 @@ func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 // Create a new user
 // (POST /users)
 func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
-	var userWithPW struct {
-		Pwd string `json:"pwd,omitempty"`
-		gen.User
-	}
-
+	var userWithPW gen.PostUsersJSONRequestBody
 	err := json.NewDecoder(r.Body).Decode(&userWithPW)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println(err.Error())
 		return
 	}
 	_ = json.NewEncoder(log.Writer()).Encode(userWithPW)
-	resp, err := server.DB.CreateUser(userWithPW.User, userWithPW.Pwd, r.Context())
+	resp, err := server.DB.CreateUser(*userWithPW.UserData, *userWithPW.Password, r.Context())
 
 	if err != nil {
 		var pgErr pgdriver.Error
@@ -82,6 +81,10 @@ func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, u
 func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
 	resp, err := server.DB.GetUserByID(userId, r.Context())
 	if err != nil {
+		if errors.Is(err, dbModels.ErrUserNotFound) {
+			http.Error(w, "User not found.", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
