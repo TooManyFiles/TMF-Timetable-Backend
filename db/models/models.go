@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
@@ -14,6 +15,7 @@ var ErrPasswordNotMachRequirements = errors.New("crypto: Password dose not match
 var ErrUserNotFound = errors.New("db: User not found")
 var ErrInvalidPassword = errors.New("db: The Password is wrong")
 var ErrInvalidToken = errors.New("db: The Token is invalid")
+var ErrChoiceNotFound = errors.New("db: Choice not found")
 
 // Class model
 type Class struct {
@@ -69,18 +71,23 @@ func (class *Class) FromGen(genClass gen.Class) Class {
 // User model
 type User struct {
 	bun.BaseModel   `bun:"table:user"`
-	Id              int     `bun:"id,pk,autoincrement,notnull"`
-	Name            string  `bun:"name,unique"`
-	Role            string  `bun:"role"`
-	DefaultChoiceId int     `bun:"defaultChoice"`
-	PwdHash         string  `bun:"pwdHash"`
-	Classes         []int   `pg:"classes,array"`
-	Email           string  `pg:"email"`
-	DefaultChoice   *Choice `bun:"rel:belongs-to,join:defaultChoice=id"`
-	Class           *Class  `bun:"rel:belongs-to,join:classes=id"`
+	Id              int      `bun:"id,pk,autoincrement,notnull"`
+	Name            string   `bun:"name,unique"`
+	Role            string   `bun:"role"`
+	DefaultChoiceId int      `bun:"defaultChoice"`
+	PwdHash         string   `bun:"pwdHash"`
+	Classes         []string `pg:"classes,array"`
+	Email           string   `pg:"email"`
+	DefaultChoice   *Choice  `bun:"rel:belongs-to,join:defaultChoice=id"`
+	Class           *Class   `bun:"rel:belongs-to,join:classes=id"`
 }
 
 func (user *User) FromGen(genUser gen.User) User {
+	strClasses := make([]string, len(user.Classes))
+	for i, s := range *genUser.Classes {
+		num := strconv.Itoa(s)
+		strClasses[i] = num
+	}
 	if user == nil {
 		user = &User{}
 	}
@@ -97,7 +104,8 @@ func (user *User) FromGen(genUser gen.User) User {
 		user.DefaultChoiceId = *genUser.DefaultChoice.Id
 	}
 	if genUser.Classes != nil {
-		user.Classes = *genUser.Classes
+
+		user.Classes = strClasses
 	}
 	if genUser.Email != nil {
 		user.Email = *genUser.Email
@@ -106,6 +114,15 @@ func (user *User) FromGen(genUser gen.User) User {
 }
 func (user *User) ToGen() gen.User {
 	role := gen.UserRole(user.Role)
+
+	intClasses := make([]int, len(user.Classes))
+	for i, s := range user.Classes {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intClasses[i] = num
+		}
+	}
+
 	if user.DefaultChoice != nil {
 		choice := user.DefaultChoice.ToGen()
 		return gen.User{
@@ -113,7 +130,7 @@ func (user *User) ToGen() gen.User {
 			Name:          user.Name,
 			Role:          &role,
 			DefaultChoice: &choice,
-			Classes:       &user.Classes,
+			Classes:       &intClasses,
 			Email:         &user.Email,
 		}
 	}
@@ -122,7 +139,7 @@ func (user *User) ToGen() gen.User {
 		Name:          user.Name,
 		Role:          &role,
 		DefaultChoice: &gen.Choice{Id: &user.DefaultChoiceId},
-		Classes:       &user.Classes,
+		Classes:       &intClasses,
 		Email:         &user.Email,
 	}
 }
@@ -177,14 +194,114 @@ func (teacher *Teacher) FromGen(genTeacher gen.Teacher) Teacher {
 // Lesson model
 type Lesson struct {
 	bun.BaseModel `bun:"table:lesson"`
-	Id            int    `bun:"id,pk,autoincrement,notnull"`
-	Subjects      []int  `pg:",array"`
-	Classes       []int  `pg:",array"`
-	Teachers      []int  `pg:",array"`
-	Rooms         []int  `pg:",array"`
-	StartTime     string // Date-time format in Go can be parsed as time.Time
-	EndTime       string
-	LastUpdate    string
+	Id            int       `bun:"id,pk,autoincrement,notnull"`
+	Subjects      []string  `pg:",array"`
+	Classes       []string  `pg:",array"`
+	Teachers      []string  `pg:",array"`
+	Rooms         []string  `pg:",array"`
+	StartTime     time.Time // Date-time format in Go can be parsed as time.Time
+	EndTime       time.Time
+	LastUpdate    time.Time
+}
+
+func (lesson *Lesson) ToGen() gen.Lesson {
+	intSubjects := make([]int, len(lesson.Subjects))
+	for i, s := range lesson.Subjects {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intSubjects[i] = num
+		}
+	}
+	intClasses := make([]int, len(lesson.Classes))
+	for i, s := range lesson.Classes {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intClasses[i] = num
+		}
+	}
+	intTeachers := make([]int, len(lesson.Teachers))
+	for i, s := range lesson.Teachers {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intTeachers[i] = num
+		}
+	}
+	intRooms := make([]int, len(lesson.Rooms))
+	for i, s := range lesson.Rooms {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intRooms[i] = num
+		}
+	}
+
+	return gen.Lesson{
+		Id:         &lesson.Id,
+		Subjects:   &intSubjects,
+		Classes:    &intClasses,
+		Teachers:   &intTeachers,
+		Rooms:      &intRooms,
+		StartTime:  lesson.StartTime,
+		EndTime:    lesson.EndTime,
+		LastUpdate: &lesson.LastUpdate,
+	}
+}
+func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
+	// Convert Subjects
+	strSubjects := make([]string, len(*genLesson.Subjects))
+	for i, s := range *genLesson.Subjects {
+		num := strconv.Itoa(s)
+		strSubjects[i] = num
+
+	}
+
+	// Convert Classes
+	strClasses := make([]string, len(*genLesson.Classes))
+	for i, s := range *genLesson.Classes {
+		num := strconv.Itoa(s)
+		strClasses[i] = num
+
+	}
+
+	// Convert Teachers
+	strTeachers := make([]string, len(*genLesson.Teachers))
+	for i, s := range *genLesson.Teachers {
+		num := strconv.Itoa(s)
+		strTeachers[i] = num
+
+	}
+
+	// Convert Rooms
+	strRooms := make([]string, len(*genLesson.Rooms))
+	for i, s := range *genLesson.Rooms {
+		num := strconv.Itoa(s)
+		strRooms[i] = num
+
+	}
+	if lesson == nil {
+		lesson = &Lesson{}
+	}
+	if genLesson.Subjects != nil {
+		lesson.Subjects = strSubjects
+	}
+	if genLesson.Classes != nil {
+		lesson.Classes = strClasses
+	}
+	if genLesson.Teachers != nil {
+		lesson.Teachers = strTeachers
+	}
+	if genLesson.Rooms != nil {
+		lesson.Rooms = strRooms
+	}
+	if genLesson.StartTime.IsZero() {
+		lesson.StartTime = genLesson.StartTime
+	}
+	if genLesson.EndTime.IsZero() {
+		lesson.EndTime = genLesson.EndTime
+	}
+	if genLesson.LastUpdate != nil {
+		lesson.LastUpdate = *genLesson.LastUpdate
+	}
+	return *lesson
 }
 
 // Room model
@@ -298,6 +415,10 @@ func (choice *Choice) FromGen(genChoice gen.Choice) Choice {
 	return *choice
 }
 
+type LessonFilter struct {
+	Choice Choice
+	User   User
+}
 type Menu struct {
 	bun.BaseModel `bun:"table:menu"`
 	Date          time.Time `bun:"date,pk,unique,notnull,type:date" json:"date,omitempty"`

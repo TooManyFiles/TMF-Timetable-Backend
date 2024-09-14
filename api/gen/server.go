@@ -54,6 +54,21 @@ type ServerInterface interface {
 	// Update a user by ID
 	// (PUT /users/{userId})
 	PutUsersUserId(w http.ResponseWriter, r *http.Request, userId int)
+	// Get choices by userId
+	// (GET /users/{userId}/choices)
+	GetUsersUserIdChoices(w http.ResponseWriter, r *http.Request, userId int)
+	// Get a choice by userId and choiceId
+	// (GET /users/{userId}/choices/{choiceId})
+	GetUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request, userId string, choiceId int)
+	// Modify or create a choice by userId and choiceId
+	// (POST /users/{userId}/choices/{choiceId})
+	PostUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request, userId int, choiceId int)
+	// Get events by a user
+	// (PUT /view)
+	PutView(w http.ResponseWriter, r *http.Request, params PutViewParams)
+	// Get events of a week by a user
+	// (PUT /view/user/{userId})
+	PutViewUserUserId(w http.ResponseWriter, r *http.Request, userId int, params PutViewUserUserIdParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -336,6 +351,193 @@ func (siw *ServerInterfaceWrapper) PutUsersUserId(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// GetUsersUserIdChoices operation middleware
+func (siw *ServerInterfaceWrapper) GetUsersUserIdChoices(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userId" -------------
+	var userId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUsersUserIdChoices(w, r, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetUsersUserIdChoicesChoiceId operation middleware
+func (siw *ServerInterfaceWrapper) GetUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userId" -------------
+	var userId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "choiceId" -------------
+	var choiceId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "choiceId", r.PathValue("choiceId"), &choiceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "choiceId", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUsersUserIdChoicesChoiceId(w, r, userId, choiceId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostUsersUserIdChoicesChoiceId operation middleware
+func (siw *ServerInterfaceWrapper) PostUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userId" -------------
+	var userId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "choiceId" -------------
+	var choiceId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "choiceId", r.PathValue("choiceId"), &choiceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "choiceId", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostUsersUserIdChoicesChoiceId(w, r, userId, choiceId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PutView operation middleware
+func (siw *ServerInterfaceWrapper) PutView(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PutViewParams
+
+	// ------------- Optional query parameter "date" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "date", r.URL.Query(), &params.Date)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "duration" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "duration", r.URL.Query(), &params.Duration)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "duration", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutView(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PutViewUserUserId operation middleware
+func (siw *ServerInterfaceWrapper) PutViewUserUserId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userId" -------------
+	var userId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PutViewUserUserIdParams
+
+	// ------------- Optional query parameter "date" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "date", r.URL.Query(), &params.Date)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "duration" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "duration", r.URL.Query(), &params.Duration)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "duration", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutViewUserUserId(w, r, userId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -463,6 +665,11 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("DELETE "+options.BaseURL+"/users/{userId}", wrapper.DeleteUsersUserId)
 	m.HandleFunc("GET "+options.BaseURL+"/users/{userId}", wrapper.GetUsersUserId)
 	m.HandleFunc("PUT "+options.BaseURL+"/users/{userId}", wrapper.PutUsersUserId)
+	m.HandleFunc("GET "+options.BaseURL+"/users/{userId}/choices", wrapper.GetUsersUserIdChoices)
+	m.HandleFunc("GET "+options.BaseURL+"/users/{userId}/choices/{choiceId}", wrapper.GetUsersUserIdChoicesChoiceId)
+	m.HandleFunc("POST "+options.BaseURL+"/users/{userId}/choices/{choiceId}", wrapper.PostUsersUserIdChoicesChoiceId)
+	m.HandleFunc("PUT "+options.BaseURL+"/view", wrapper.PutView)
+	m.HandleFunc("PUT "+options.BaseURL+"/view/user/{userId}", wrapper.PutViewUserUserId)
 
 	return m
 }

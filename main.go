@@ -17,6 +17,7 @@ import (
 	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/db"
+	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/rs/cors"
 )
 
@@ -35,6 +36,16 @@ func main() {
 
 func initDB() {
 	database = db.NewDatabase(config.Config.DatabaseConfig)
+	querry := database.DB.NewInsert()
+	less := dbModels.Lesson{
+		Subjects: []string{"1", "2", "4", " 5"},
+	}
+	querry.Model(&less)
+	_, err := querry.Exec(context.Background())
+	if err != nil {
+		log.Println(err.Error())
+
+	}
 }
 
 func initServer() {

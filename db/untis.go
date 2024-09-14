@@ -2,9 +2,14 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"strconv"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
 func (database *Database) GetTeachers(ctx context.Context) ([]gen.Teacher, error) {
@@ -54,4 +59,95 @@ func (database *Database) GetClasses(ctx context.Context) ([]gen.Class, error) {
 		genClasses[i] = c.ToGen()
 	}
 	return genClasses, err
+}
+func (database *Database) GetLesson(filter dbModels.LessonFilter, ctx context.Context) ([]gen.Lesson, error) {
+	if filter.User.Id == 0 {
+		return nil, errors.New("user ID is required to fetch lessons")
+	}
+	var choice dbModels.Choice
+	// get Choice
+	if filter.Choice.Id == 0 {
+		if filter.Choice.Choice == "" {
+			query := database.DB.NewSelect()
+			query.Model(&filter.User)
+			query.WherePK()
+			query.Relation("DefaultChoice")
+			err := query.Scan(ctx)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return nil, dbModels.ErrUserNotFound
+				}
+				return nil, err
+			}
+			choice = *filter.User.DefaultChoice
+		} else {
+			choice = filter.Choice
+			userQuery := database.DB.NewSelect()
+			userQuery.Model(&filter.User)
+			userQuery.WherePK()
+			err := userQuery.Scan(ctx)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return nil, dbModels.ErrUserNotFound
+				}
+				return nil, err
+			}
+			//TODO: check class
+		}
+
+	} else if filter.Choice.Id != 0 {
+		userQuery := database.DB.NewSelect()
+		userQuery.Model(&filter.User)
+		userQuery.WherePK()
+		err := userQuery.Scan(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, dbModels.ErrUserNotFound
+			}
+			return nil, err
+		}
+
+		query := database.DB.NewSelect()
+		query.Model(&filter.Choice)
+		query.WherePK()
+		if filter.User.Role != string(gen.UserRoleAdmin) {
+			query.Where("\"choice\".\"userId\" = ?", filter.User.Id) //TODO: disable if Admin
+		}
+		err = query.Scan(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, dbModels.ErrChoiceNotFound
+			}
+			return nil, err
+		}
+		choice = filter.Choice
+	}
+
+	lessonQuery := database.DB.NewSelect()
+	lessons := make([]dbModels.Lesson, 0)
+	lessonQuery.Model(&lessons)
+
+	var result map[string]interface{}
+	parsingError := json.Unmarshal([]byte(choice.Choice), &result)
+
+	if parsingError != nil || choice.Choice == "" || len(result) == 0 {
+		lessonQuery.Where("\"lesson\".\"classes\" @> ?", pgdialect.Array(filter.User.Classes))
+	} else {
+
+		for key, value := range result {
+			if classID, err := strconv.Atoi(key); err == nil {
+				if classID > 0 {
+					lessonQuery.WhereOr("(\"lesson\".\"classes\" = ? AND \"lesson\".\"subjects\" @> ?)", classID, pgdialect.Array(value))
+				} else { //TODO: If a Class ID is present as a negative as well as a positive value only the positive should be used.
+					lessonQuery.WhereOr("(\"lesson\".\"classes\" = ? AND NOT \"lesson\".\"subjects\" @> ?)", classID, pgdialect.Array(value))
+				}
+			}
+		}
+	}
+	err := lessonQuery.Scan(ctx)
+	genLesson := make([]gen.Lesson, len(lessons))
+	for i, c := range lessons {
+		genLesson[i] = c.ToGen()
+	}
+	return genLesson, err
 }
