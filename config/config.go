@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	goUntisAPIstructs "github.com/Mr-Comand/goUntisAPI/structs"
 	"github.com/invopop/yaml"
 	"github.com/spf13/viper"
 )
@@ -21,6 +22,7 @@ type ConfigStruct struct {
 	}
 	DataCollectors struct {
 		TFfoodplanAPIURL string
+		UntisApiConfig   goUntisAPIstructs.ApiConfig
 	}
 
 	DatabaseConfig DatabaseConfig
@@ -33,8 +35,18 @@ var Config ConfigStruct = ConfigStruct{
 	Crypto: struct{ JwtSecretKey string }{
 		JwtSecretKey: "secret",
 	},
-	DataCollectors: struct{ TFfoodplanAPIURL string }{
+	DataCollectors: struct {
+		TFfoodplanAPIURL string
+		UntisApiConfig   goUntisAPIstructs.ApiConfig
+	}{
 		TFfoodplanAPIURL: "http://www.treffpunkt-fanny.de/images/stories/dokumente/Essensplaene/api/TFfoodplanAPI.php",
+		UntisApiConfig: goUntisAPIstructs.ApiConfig{
+			Server:    "school.server.domain",
+			User:      "username",
+			Password:  "password",
+			Useragent: "client",
+			School:    "school",
+		},
 	},
 }
 
