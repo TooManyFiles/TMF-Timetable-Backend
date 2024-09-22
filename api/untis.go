@@ -66,3 +66,31 @@ func (server Server) GetUntisTeachers(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(teachers)
 }
+func (server Server) GetUntisFetch(w http.ResponseWriter, r *http.Request) {
+	_, err := server.isLoggedIn(w, r) //TODO: check if admin
+	if err != nil {
+		return
+	}
+	err = server.DB.FetchTeachers(r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	err = server.DB.FetchRooms(r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	err = server.DB.FetchSubjects(r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	err = server.DB.FetchClasses(r.Context())
+
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

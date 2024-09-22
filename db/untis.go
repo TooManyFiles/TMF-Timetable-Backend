@@ -8,10 +8,30 @@ import (
 	"strconv"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
+func (database *Database) FetchTeachers(ctx context.Context) error {
+	data, err := dataCollectors.DataCollectors.UntisClient.GetTeachers()
+	if err != nil {
+		return err
+	}
+	teachers := make([]dbModels.Teacher, len(data))
+	for i, t := range data {
+		teacher := dbModels.Teacher{
+			Id:        t.ID,
+			Name:      t.LongName,
+			FirstName: t.ForeName,
+			ShortName: t.Name,
+		}
+		teachers[i] = teacher
+	}
+	querya := database.DB.NewInsert()
+	_, err = querya.Model(&teachers).Exec(ctx)
+	return err
+}
 func (database *Database) GetTeachers(ctx context.Context) ([]gen.Teacher, error) {
 	query := database.DB.NewSelect()
 	teachers := make([]dbModels.Teacher, 0)
@@ -23,6 +43,24 @@ func (database *Database) GetTeachers(ctx context.Context) ([]gen.Teacher, error
 		genTeachers[i] = t.ToGen()
 	}
 	return genTeachers, err
+}
+func (database *Database) FetchSubjects(ctx context.Context) error {
+	data, err := dataCollectors.DataCollectors.UntisClient.GetSubjects()
+	if err != nil {
+		return err
+	}
+	subjects := make([]dbModels.Subject, len(data))
+	for i, t := range data {
+		subject := dbModels.Subject{
+			Id:        t.ID,
+			Name:      t.LongName,
+			ShortName: t.Name,
+		}
+		subjects[i] = subject
+	}
+	querya := database.DB.NewInsert()
+	_, err = querya.Model(&subjects).Exec(ctx)
+	return err
 }
 func (database *Database) GetSubjects(ctx context.Context) ([]gen.Subject, error) {
 	query := database.DB.NewSelect()
@@ -48,6 +86,24 @@ func (database *Database) GetRooms(ctx context.Context) ([]gen.Room, error) {
 	}
 	return genRooms, err
 }
+func (database *Database) FetchRooms(ctx context.Context) error {
+	data, err := dataCollectors.DataCollectors.UntisClient.GetRooms()
+	if err != nil {
+		return err
+	}
+	rooms := make([]dbModels.Room, len(data))
+	for i, t := range data {
+		room := dbModels.Room{
+			Id:                    t.ID,
+			Name:                  t.Name,
+			AdditionalInformation: t.LongName,
+		}
+		rooms[i] = room
+	}
+	querya := database.DB.NewInsert()
+	_, err = querya.Model(&rooms).Exec(ctx)
+	return err
+}
 func (database *Database) GetClasses(ctx context.Context) ([]gen.Class, error) {
 	query := database.DB.NewSelect()
 	classes := make([]dbModels.Class, 0)
@@ -59,6 +115,25 @@ func (database *Database) GetClasses(ctx context.Context) ([]gen.Class, error) {
 		genClasses[i] = c.ToGen()
 	}
 	return genClasses, err
+}
+func (database *Database) FetchClasses(ctx context.Context) error {
+	data, err := dataCollectors.DataCollectors.UntisClient.GetClasses()
+	if err != nil {
+		return err
+	}
+	rooms := make([]dbModels.Class, len(data))
+	for i, t := range data {
+		teacher := dbModels.Class{
+			Id:                 t.ID,
+			Name:               t.Name,
+			MainTeacherId:      t.Teacher1,
+			SecondaryTeacherId: t.Teacher2,
+		}
+		rooms[i] = teacher
+	}
+	querya := database.DB.NewInsert()
+	_, err = querya.Model(&rooms).Exec(ctx)
+	return err
 }
 func (database *Database) GetLesson(filter dbModels.LessonFilter, ctx context.Context) ([]gen.Lesson, error) {
 	if filter.User.Id == 0 {

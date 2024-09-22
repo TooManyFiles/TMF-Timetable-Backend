@@ -83,7 +83,7 @@ type User struct {
 }
 
 func (user *User) FromGen(genUser gen.User) User {
-	strClasses := make([]string, len(user.Classes))
+	strClasses := make([]string, len(*genUser.Classes))
 	for i, s := range *genUser.Classes {
 		num := strconv.Itoa(s)
 		strClasses[i] = num
@@ -149,6 +149,7 @@ type Teacher struct {
 	bun.BaseModel `bun:"table:teacher"`
 	Id            int `bun:"id,pk,autoincrement,notnull"`
 	UserId        int `bun:"userId"`
+	ShortName     string
 	Name          string
 	FirstName     string
 	Pronoun       string
@@ -164,6 +165,7 @@ func (teacher *Teacher) ToGen() gen.Teacher {
 		FirstName: &teacher.FirstName,
 		Pronoun:   &teacher.Pronoun,
 		Title:     &teacher.Title,
+		ShortName: &teacher.ShortName,
 	}
 }
 func (teacher *Teacher) FromGen(genTeacher gen.Teacher) Teacher {

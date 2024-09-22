@@ -10,11 +10,12 @@ var DataCollectors DataCollectorsStruct
 
 type DataCollectorsStruct struct {
 	TFfoodplanAPI tffoodplanapi.TFfoodplanAPI
+	UntisClient   untisDataCollectors.UntisClient
 }
 
 func InitDataCollectors() {
 	DataCollectors.TFfoodplanAPI = tffoodplanapi.TFfoodplanAPI{
 		URL: config.Config.DataCollectors.TFfoodplanAPIURL,
 	}
-	untisDataCollectors.Init(config.Config.DataCollectors.UntisApiConfig)
+	DataCollectors.UntisClient, _ = untisDataCollectors.Init(config.Config.DataCollectors.UntisApiConfig)
 }

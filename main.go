@@ -1,6 +1,7 @@
 //go:build tools
 // +build tools
 
+//go:generate go get github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 //go:generate go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config=tools/codegen-config/models.yml TMF-Timetable-Docs/swagger.yml
 //go:generate go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config=tools/codegen-config/server.yml TMF-Timetable-Docs/swagger.yml
 package main

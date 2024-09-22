@@ -3,10 +3,10 @@ module github.com/TooManyFiles/TMF-Timetable-Backend
 go 1.22.1
 
 require (
-	github.com/Mr-Comand/goUntisAPI v1.0.2
+	github.com/Mr-Comand/goUntisAPI v1.0.4
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/invopop/yaml v0.2.0
+	github.com/invopop/yaml v0.3.1
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/rs/cors v1.11.1
 	github.com/spf13/viper v1.19.0
