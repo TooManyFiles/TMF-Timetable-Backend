@@ -20,7 +20,7 @@ type ConfigStruct struct {
 	Crypto struct {
 		JwtSecretKey string
 		Untis        struct {
-			FixedIV []byte // Must be 16 bytes for AES
+			FixedIV string // Must be 16 bytes for AES
 			Salt    string
 		}
 	}
@@ -39,16 +39,16 @@ var Config ConfigStruct = ConfigStruct{
 	Crypto: struct {
 		JwtSecretKey string
 		Untis        struct {
-			FixedIV []byte // Must be 16 bytes for AES
+			FixedIV string // Must be 16 bytes for AES
 			Salt    string
 		}
 	}{
 		JwtSecretKey: "secret",
 		Untis: struct {
-			FixedIV []byte // Must be 16 bytes for AES
+			FixedIV string // Must be 16 bytes for AES
 			Salt    string
 		}{
-			FixedIV: []byte("example_iv123456"),
+			FixedIV: "example_iv123456",
 			Salt:    "example_salt",
 		},
 	},
