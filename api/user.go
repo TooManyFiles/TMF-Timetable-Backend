@@ -131,7 +131,11 @@ func (server Server) PutUserUntisAcc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	key, err := base64.StdEncoding.DecodeString(claims.CryptoKey)
-	err = server.DB.UpdateUntisLogin(user, *JSONRequestBody.UntisName, *JSONRequestBody.Forename, *JSONRequestBody.Surname, *JSONRequestBody.UntisPWD, key, r.Context())
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	err = server.DB.UpdateUntisLogin(user, *JSONRequestBody.UserName, *JSONRequestBody.Forename, *JSONRequestBody.Surname, *JSONRequestBody.UntisPWD, key, r.Context())
 	if err != nil {
 		if errors.Is(err, dbModels.ErrUserNotFound) {
 			http.Error(w, "User not found.", http.StatusNotFound)
