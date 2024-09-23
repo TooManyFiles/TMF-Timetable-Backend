@@ -8,6 +8,7 @@ import (
 
 	"github.com/Mr-Comand/goUntisAPI/structs"
 	"github.com/Mr-Comand/goUntisAPI/untisApi"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 )
 
@@ -18,8 +19,8 @@ type UntisClient struct {
 
 func Init(apiConfig structs.ApiConfig) (UntisClient, error) {
 	untisClient := UntisClient{
-		staticClient:  untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG),
-		dynamicClient: untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG),
+		staticClient:  untisApi.NewClient(apiConfig, log.Default(), config.Config.DataCollectors.Logging.UntisApi.StaticClient),
+		dynamicClient: untisApi.NewClient(apiConfig, log.Default(), config.Config.DataCollectors.Logging.UntisApi.DynamicClient),
 	}
 	err := untisClient.staticClient.Authenticate()
 	if err != nil {
@@ -116,7 +117,7 @@ func (untisClient UntisClient) GetLessonsByClass(class dbModels.Class, startDate
 }
 
 func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisPWD string, startDate time.Time, endDate time.Time) ([]structs.Period, error) {
-	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), config.Config.DataCollectors.Logging.UntisApi.DynamicClient)
 	dynamicClient.ApiConfig.User = student.UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err := dynamicClient.Authenticate()
@@ -174,7 +175,7 @@ func (untisClient UntisClient) SetupStudent(user *dbModels.User, forename string
 		return err
 	}
 	student := findPerson(students, forename, surname)
-	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), config.Config.DataCollectors.Logging.UntisApi.DynamicClient)
 	dynamicClient.ApiConfig.User = user.UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err = dynamicClient.Authenticate()

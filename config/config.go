@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	goUntisAPIstructs "github.com/Mr-Comand/goUntisAPI/structs"
+	"github.com/Mr-Comand/goUntisAPI/untisApi"
 	"github.com/invopop/yaml"
 	"github.com/spf13/viper"
 )
@@ -27,6 +28,12 @@ type ConfigStruct struct {
 	DataCollectors struct {
 		TFfoodplanAPIURL string
 		UntisApiConfig   goUntisAPIstructs.ApiConfig
+		Logging          struct {
+			UntisApi struct {
+				StaticClient  untisApi.LogLevel
+				DynamicClient untisApi.LogLevel
+			}
+		}
 	}
 
 	DatabaseConfig DatabaseConfig
@@ -55,6 +62,12 @@ var Config ConfigStruct = ConfigStruct{
 	DataCollectors: struct {
 		TFfoodplanAPIURL string
 		UntisApiConfig   goUntisAPIstructs.ApiConfig
+		Logging          struct {
+			UntisApi struct {
+				StaticClient  untisApi.LogLevel
+				DynamicClient untisApi.LogLevel
+			}
+		}
 	}{
 		TFfoodplanAPIURL: "http://www.treffpunkt-fanny.de/images/stories/dokumente/Essensplaene/api/TFfoodplanAPI.php",
 		UntisApiConfig: goUntisAPIstructs.ApiConfig{
@@ -63,6 +76,20 @@ var Config ConfigStruct = ConfigStruct{
 			Password:  "password",
 			Useragent: "client",
 			School:    "school",
+		},
+		Logging: struct {
+			UntisApi struct {
+				StaticClient  untisApi.LogLevel
+				DynamicClient untisApi.LogLevel
+			}
+		}{
+			UntisApi: struct {
+				StaticClient  untisApi.LogLevel
+				DynamicClient untisApi.LogLevel
+			}{
+				StaticClient:  untisApi.INFO,
+				DynamicClient: untisApi.WARN,
+			},
 		},
 	},
 }
