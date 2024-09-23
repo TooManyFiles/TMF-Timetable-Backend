@@ -3,9 +3,11 @@ package db
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 )
 
@@ -107,4 +109,75 @@ func (database *Database) GetUsers(ctx context.Context) ([]gen.User, error) {
 		genUsers[i] = s.ToGen()
 	}
 	return genUsers, err
+}
+func (database *Database) UpdateUntisLogin(genUser gen.User, untisName string, forename string, surname string, untisPWD string, key []byte, ctx context.Context) error {
+	var user dbModels.User
+	user.FromGen(genUser)
+	user.UntisName = untisName
+	err := dataCollectors.DataCollectors.UntisClient.SetupStudent(&user, forename, surname, untisPWD)
+	if err != nil {
+		return err
+	}
+	query := database.DB.NewUpdate()
+	query.Model(&user)
+	query.WherePK()
+	query.Column("untis_pwd", "untis_name", "untis_id")
+
+	encryptData, err := encrypt([]byte(untisPWD), key)
+	if err != nil {
+		return err
+	}
+	user.UntisPWD = base64.StdEncoding.EncodeToString(encryptData)
+	_, err = query.Exec(ctx)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return dbModels.ErrUserNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func (database *Database) GetUntisLogin(user dbModels.User, key []byte, ctx context.Context) (string, error) {
+	query := database.DB.NewSelect()
+	query.Model(&user)
+	query.WherePK()
+	err := query.Scan(ctx)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", dbModels.ErrUserNotFound
+		}
+		return "", err
+	}
+
+	untisPWD, err := base64.StdEncoding.DecodeString(user.UntisPWD)
+	if err != nil {
+		return "", err
+	}
+
+	decryptData, err := decrypt(untisPWD, key)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decryptData), nil
+}
+func (database *Database) GetUntisLoginByHeader(user dbModels.User, AuthorizationHeader string, ctx context.Context) (string, error) {
+	token := AuthorizationHeader
+	if len(token) > 7 && token[:7] == "Bearer " {
+		token = token[7:]
+		user, claims, err := database.verifySession(token, ctx)
+		if err != nil {
+			return "", err
+		}
+		key, err := base64.RawStdEncoding.DecodeString(claims.CryptoKey)
+		if err != nil {
+			return "", err
+		}
+		return database.GetUntisLogin(user, key, ctx)
+	}
+	return "", dbModels.ErrInvalidToken
+
 }

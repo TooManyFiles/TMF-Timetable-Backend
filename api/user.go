@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"log"
@@ -95,6 +96,7 @@ func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, user
 
 // Update a user by ID
 // (PUT /users/{userId})
+// TODO: implement PutUsersUserId
 func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
 	var resp []gen.User
 
@@ -105,11 +107,40 @@ func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, user
 // Returns currently logged in user.
 // (GET /currentUser)
 func (server Server) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	user, err := server.isLoggedIn(w, r)
+	user, _, err := server.isLoggedIn(w, r)
 	if err != nil {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(user)
+}
+
+// Update the untisAcc of the active user
+// (PUT /user/untisAcc)
+func (server Server) PutUserUntisAcc(w http.ResponseWriter, r *http.Request) {
+	user, claims, err := server.isLoggedIn(w, r)
+	if err != nil {
+		return
+	}
+	var JSONRequestBody gen.PutUserUntisAccJSONBody
+	err = json.NewDecoder(r.Body).Decode(&JSONRequestBody)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println(err.Error())
+		return
+	}
+	key, err := base64.StdEncoding.DecodeString(claims.CryptoKey)
+	err = server.DB.UpdateUntisLogin(user, *JSONRequestBody.UntisName, *JSONRequestBody.Forename, *JSONRequestBody.Surname, *JSONRequestBody.UntisPWD, key, r.Context())
+	if err != nil {
+		if errors.Is(err, dbModels.ErrUserNotFound) {
+			http.Error(w, "User not found.", http.StatusNotFound)
+			return
+		}
+		print(err.Error())
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
 }

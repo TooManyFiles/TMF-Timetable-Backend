@@ -2,32 +2,39 @@ package untisDataCollectors
 
 import (
 	"errors"
+	"strconv"
+	"time"
 
 	"github.com/Mr-Comand/goUntisAPI/structs"
 	"github.com/Mr-Comand/goUntisAPI/untisApi"
+	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 )
 
 type UntisClient struct {
-	client *untisApi.Client
+	staticClient  *untisApi.Client
+	dynamicClient *untisApi.Client
 }
 
 func Init(apiConfig structs.ApiConfig) (UntisClient, error) {
-	untisClient := UntisClient{client: untisApi.NewClient(apiConfig)}
-	err := untisClient.client.Authenticate()
+	untisClient := UntisClient{
+		staticClient:  untisApi.NewClient(apiConfig),
+		dynamicClient: untisApi.NewClient(apiConfig),
+	}
+	err := untisClient.staticClient.Authenticate()
 	if err != nil {
 		return UntisClient{}, err
 	}
-	untisClient.client.Test()
+	untisClient.staticClient.Test()
 	// untisClient.client.Logout()
 	return untisClient, nil
 }
 
 func (untisClient UntisClient) reAuthenticate() error {
-	err := untisClient.client.Test()
+	err := untisClient.staticClient.Test()
 	if err != nil {
 		var rpcerr structs.RPCError
-		if errors.As(err, rpcerr) && rpcerr.Code == -8520 {
-			return untisClient.client.Authenticate()
+		if errors.As(err, rpcerr) && rpcerr.Code == -8520 { //TODO: Test
+			return untisClient.staticClient.Authenticate()
 		}
 		return err
 	}
@@ -38,7 +45,7 @@ func (untisClient UntisClient) GetTeachers() ([]structs.Teacher, error) {
 	if err != nil {
 		return nil, err
 	}
-	teachers, err := untisClient.client.GetTeachers()
+	teachers, err := untisClient.staticClient.GetTeachers()
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +56,7 @@ func (untisClient UntisClient) GetSubjects() ([]structs.Subject, error) {
 	if err != nil {
 		return nil, err
 	}
-	subjects, err := untisClient.client.GetSubjects()
+	subjects, err := untisClient.staticClient.GetSubjects()
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +67,7 @@ func (untisClient UntisClient) GetRooms() ([]structs.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-	subjects, err := untisClient.client.GetRooms()
+	subjects, err := untisClient.staticClient.GetRooms()
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +78,110 @@ func (untisClient UntisClient) GetClasses() ([]structs.Class, error) {
 	if err != nil {
 		return nil, err
 	}
-	classes, err := untisClient.client.GetClasses()
+	classes, err := untisClient.staticClient.GetClasses()
 	if err != nil {
 		return nil, err
 	}
 	return classes, nil
+}
+func (untisClient UntisClient) GetLessonsByClass(class dbModels.Class, startDate time.Time, endDate time.Time) ([]structs.Period, error) {
+	err := untisClient.reAuthenticate()
+	if err != nil {
+		return nil, err
+	}
+	body := structs.GetTimetableRequest{
+		Element: structs.GetTimetableRequestElement{
+			Type: 1,
+			Id:   class.Id,
+		},
+		ShowBooking:   true,
+		ShowInfo:      true,
+		ShowLsText:    true,
+		ShowSubstText: true,
+		ShowLsNumber:  true,
+	}
+	if !startDate.IsZero() {
+		body.StartDate, _ = strconv.Atoi(startDate.Local().Format("20060102"))
+	}
+	if endDate.IsZero() {
+		body.EndDate, _ = strconv.Atoi(startDate.AddDate(0, 0, 7).Local().Format("20060102"))
+	} else {
+		body.StartDate, _ = strconv.Atoi(startDate.Local().Format("20060102"))
+	}
+	lessons, err := untisClient.staticClient.GetTimetable(body)
+	if err != nil {
+		return nil, err
+	}
+	return lessons, nil
+}
+
+func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisPWD string, startDate time.Time, endDate time.Time) ([]structs.Period, error) {
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig)
+	dynamicClient.ApiConfig.User = student.UntisName
+	dynamicClient.ApiConfig.Password = untisPWD
+	err := dynamicClient.Authenticate()
+	if err != nil {
+		return nil, err
+	}
+	body := structs.GetTimetableRequest{
+		Element: structs.GetTimetableRequestElement{
+			Type: 5,
+			Id:   student.UntisId,
+		},
+		ShowBooking:   true,
+		ShowInfo:      true,
+		ShowLsText:    true,
+		ShowSubstText: true,
+		ShowLsNumber:  true,
+	}
+	if !startDate.IsZero() {
+		body.StartDate, _ = strconv.Atoi(startDate.Local().Format("20060102"))
+	}
+	if endDate.IsZero() {
+		body.EndDate, _ = strconv.Atoi(startDate.AddDate(0, 0, 7).Local().Format("20060102"))
+	} else {
+		body.StartDate, _ = strconv.Atoi(startDate.Local().Format("20060102"))
+	}
+	lessons, err := dynamicClient.GetTimetable(body)
+	if err != nil {
+		return nil, err
+	}
+	return lessons, nil
+}
+
+// Function to search for a person by foreName and longName
+func findPerson(students []structs.Student, foreName string, longName string) *structs.Student {
+	for _, person := range students {
+		if person.ForeName == foreName && person.LongName == longName {
+			return &person
+		}
+	}
+	return nil // Return nil if not found
+}
+
+var ErrStudentNotFound = errors.New("student not found")
+
+func (untisClient UntisClient) SetupStudent(user *dbModels.User, forename string, surname string, untisPWD string) error {
+	err := untisClient.reAuthenticate()
+	if err != nil {
+		return err
+	}
+	students, err := untisClient.staticClient.GetStudents()
+	if err != nil {
+		return err
+	}
+	student := findPerson(students, forename, surname)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig)
+	dynamicClient.ApiConfig.User = user.UntisName
+	dynamicClient.ApiConfig.Password = untisPWD
+	err = dynamicClient.Authenticate()
+	if err != nil {
+		return err
+	}
+	if student.ID == dynamicClient.PersonID {
+		user.UntisId = dynamicClient.PersonID
+		return nil
+	} else {
+		return ErrStudentNotFound
+	}
 }

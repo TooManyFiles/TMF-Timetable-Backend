@@ -78,6 +78,9 @@ type User struct {
 	PwdHash         string   `bun:"pwdHash"`
 	Classes         []string `pg:"classes,array"`
 	Email           string   `pg:"email"`
+	UntisPWD        string   `pg:"untispwd"`
+	UntisName       string   `pg:"untisname"`
+	UntisId         int      `pg:"untisid"`
 	DefaultChoice   *Choice  `bun:"rel:belongs-to,join:defaultChoice=id"`
 	Class           *Class   `bun:"rel:belongs-to,join:classes=id"`
 }

@@ -19,6 +19,10 @@ type DatabaseConfig struct {
 type ConfigStruct struct {
 	Crypto struct {
 		JwtSecretKey string
+		Untis        struct {
+			FixedIV []byte // Must be 16 bytes for AES
+			Salt    string
+		}
 	}
 	DataCollectors struct {
 		TFfoodplanAPIURL string
@@ -32,8 +36,21 @@ var Config ConfigStruct = ConfigStruct{
 	DatabaseConfig: DatabaseConfig{
 		Connection: "postgres://user:password@localhost:5432/db?sslmode=disable",
 	},
-	Crypto: struct{ JwtSecretKey string }{
+	Crypto: struct {
+		JwtSecretKey string
+		Untis        struct {
+			FixedIV []byte // Must be 16 bytes for AES
+			Salt    string
+		}
+	}{
 		JwtSecretKey: "secret",
+		Untis: struct {
+			FixedIV []byte // Must be 16 bytes for AES
+			Salt    string
+		}{
+			FixedIV: []byte("example_iv123456"),
+			Salt:    "example_salt",
+		},
 	},
 	DataCollectors: struct {
 		TFfoodplanAPIURL string

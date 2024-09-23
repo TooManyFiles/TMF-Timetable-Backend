@@ -151,6 +151,14 @@ type PostLoginJSONBody struct {
 	Password *string `json:"password,omitempty"`
 }
 
+// PutUserUntisAccJSONBody defines parameters for PutUserUntisAcc.
+type PutUserUntisAccJSONBody struct {
+	Forename *string `json:"forename,omitempty"`
+	Surname  *string `json:"surname,omitempty"`
+	UntisPWD *string `json:"untisPWD,omitempty"`
+	UserName *string `json:"userName,omitempty"`
+}
+
 // PostUsersJSONBody defines parameters for PostUsers.
 type PostUsersJSONBody struct {
 	Password *string `json:"password,omitempty"`
@@ -201,6 +209,9 @@ type PutViewUserUserIdJSONBodyProvider string
 
 // PostLoginJSONRequestBody defines body for PostLogin for application/json ContentType.
 type PostLoginJSONRequestBody PostLoginJSONBody
+
+// PutUserUntisAccJSONRequestBody defines body for PutUserUntisAcc for application/json ContentType.
+type PutUserUntisAccJSONRequestBody PutUserUntisAccJSONBody
 
 // PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
 type PostUsersJSONRequestBody PostUsersJSONBody

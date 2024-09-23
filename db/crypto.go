@@ -1,11 +1,15 @@
 package db
 
 import (
+	"bytes"
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -14,14 +18,16 @@ import (
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 // Claims represents the JWT claims
 type Claims struct {
-	UserId int    `json:"userID"`
-	Name   string `json:"userName"`
-	Role   string `json:"role"`
-	PWD    string `json:"pwd"`
+	UserId    int    `json:"userID"`
+	Name      string `json:"userName"`
+	Role      string `json:"role"`
+	PWD       string `json:"pwd"`
+	CryptoKey string `json:"cKey"`
 	jwt.RegisteredClaims
 }
 
@@ -66,7 +72,7 @@ func (database *Database) CreateSession(body gen.PostLoginJSONBody, cxt context.
 	}
 	if verified {
 		// Generate a new session token
-		token, err := generateSessionToken(user, time.Now().AddDate(1, 0, 0))
+		token, err := generateSessionToken(user, *body.Password, time.Now().AddDate(1, 0, 0))
 		if err != nil {
 			return "", gen.User{}, err
 		}
@@ -75,15 +81,16 @@ func (database *Database) CreateSession(body gen.PostLoginJSONBody, cxt context.
 	return "", gen.User{}, err
 
 }
-func generateSessionToken(user dbModels.User, expirationTime time.Time) (string, error) {
+func generateSessionToken(user dbModels.User, userPWD string, expirationTime time.Time) (string, error) {
 	// Generate a random token
 
 	// Create the JWT claims, which includes the email and expiration time
 	claims := &Claims{
-		UserId: user.Id,
-		Name:   user.Name,
-		Role:   user.Role,
-		PWD:    generateSHA256Hash(user.PwdHash)[:8],
+		UserId:    user.Id,
+		Name:      user.Name,
+		Role:      user.Role,
+		PWD:       generateSHA256Hash(user.PwdHash)[:8],
+		CryptoKey: base64.StdEncoding.EncodeToString(deriveKey(userPWD)),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -140,10 +147,10 @@ func unpackToken(tokenString string) (*Claims, error) {
 
 	return claims, nil
 }
-func (database *Database) verifySession(tokenString string, cxt context.Context) (dbModels.User, error) {
+func (database *Database) verifySession(tokenString string, cxt context.Context) (dbModels.User, *Claims, error) {
 	claims, err := unpackToken(tokenString)
 	if err != nil {
-		return dbModels.User{}, err
+		return dbModels.User{}, nil, err
 	}
 	var user dbModels.User
 	query := database.DB.NewSelect()
@@ -153,18 +160,68 @@ func (database *Database) verifySession(tokenString string, cxt context.Context)
 	err = query.Scan(cxt) //sql.ErrNoRows
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return dbModels.User{}, dbModels.ErrUserNotFound
+			return dbModels.User{}, claims, dbModels.ErrUserNotFound
 		}
-		return dbModels.User{}, err
+		return dbModels.User{}, claims, err
 	}
 
 	if claims.PWD == generateSHA256Hash(user.PwdHash)[:8] {
-		return user, nil
+		return user, claims, nil
 	}
-	return dbModels.User{}, dbModels.ErrInvalidPassword
+	return dbModels.User{}, claims, dbModels.ErrInvalidPassword
 
 }
-func (database *Database) VerifySession(tokenString string, cxt context.Context) (gen.User, error) {
-	user, err := database.verifySession(tokenString, cxt)
-	return user.ToGen(), err
+func (database *Database) VerifySession(tokenString string, cxt context.Context) (gen.User, *Claims, error) {
+	user, claims, err := database.verifySession(tokenString, cxt)
+	return user.ToGen(), claims, err
+}
+
+// Derive a key from the password using PBKDF2 (without salt)
+func deriveKey(password string) []byte {
+	return pbkdf2.Key([]byte(password), []byte(config.Config.Crypto.Untis.Salt), 100000, 32, sha256.New)
+}
+
+// Pad data to be a multiple of the block size
+func pad(data []byte) []byte {
+	padding := aes.BlockSize - len(data)%aes.BlockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(data, padtext...)
+}
+
+// Unpad data
+func unpad(data []byte) ([]byte, error) {
+	padding := data[len(data)-1]
+	if int(padding) > aes.BlockSize {
+		return nil, fmt.Errorf("padding size error")
+	}
+	return data[:len(data)-int(padding)], nil
+}
+
+// Encrypt data using AES with a fixed IV
+func encrypt(data []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	data = pad(data) // Pad data before encryption
+
+	ciphertext := make([]byte, len(data))
+	mode := cipher.NewCBCEncrypter(block, []byte(config.Config.Crypto.Untis.FixedIV))
+	mode.CryptBlocks(ciphertext, data)
+
+	return ciphertext, nil // Return ciphertext without prepending IV
+}
+
+// Decrypt data using AES with a fixed IV
+func decrypt(encData []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	mode := cipher.NewCBCDecrypter(block, []byte(config.Config.Crypto.Untis.FixedIV))
+	mode.CryptBlocks(encData, encData)
+
+	return unpad(encData) // Unpad after decryption
 }

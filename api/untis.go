@@ -6,7 +6,7 @@ import (
 )
 
 func (server Server) GetUntisClasses(w http.ResponseWriter, r *http.Request) {
-	_, err := server.isLoggedIn(w, r)
+	_, _, err := server.isLoggedIn(w, r)
 	if err != nil {
 		return
 	}
@@ -22,7 +22,7 @@ func (server Server) GetUntisClasses(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server Server) GetUntisRooms(w http.ResponseWriter, r *http.Request) {
-	_, err := server.isLoggedIn(w, r)
+	_, _, err := server.isLoggedIn(w, r)
 	if err != nil {
 		return
 	}
@@ -38,7 +38,7 @@ func (server Server) GetUntisRooms(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server Server) GetUntisSubjects(w http.ResponseWriter, r *http.Request) {
-	_, err := server.isLoggedIn(w, r)
+	_, _, err := server.isLoggedIn(w, r)
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func (server Server) GetUntisSubjects(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server Server) GetUntisTeachers(w http.ResponseWriter, r *http.Request) {
-	_, err := server.isLoggedIn(w, r)
+	_, _, err := server.isLoggedIn(w, r)
 	if err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ func (server Server) GetUntisTeachers(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(teachers)
 }
 func (server Server) GetUntisFetch(w http.ResponseWriter, r *http.Request) {
-	_, err := server.isLoggedIn(w, r) //TODO: check if admin
+	_, _, err := server.isLoggedIn(w, r) //TODO: check if admin
 	if err != nil {
 		return
 	}

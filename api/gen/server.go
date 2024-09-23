@@ -42,6 +42,9 @@ type ServerInterface interface {
 	// Get all teachers
 	// (GET /untis/teachers)
 	GetUntisTeachers(w http.ResponseWriter, r *http.Request)
+	// Update the untisAcc of the active user
+	// (PUT /user/untisAcc)
+	PutUserUntisAcc(w http.ResponseWriter, r *http.Request)
 	// Get all users
 	// (GET /users)
 	GetUsers(w http.ResponseWriter, r *http.Request)
@@ -263,6 +266,26 @@ func (siw *ServerInterfaceWrapper) GetUntisTeachers(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetUntisTeachers(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutUserUntisAcc operation middleware
+func (siw *ServerInterfaceWrapper) PutUserUntisAcc(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutUserUntisAcc(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -736,6 +759,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("GET "+options.BaseURL+"/untis/rooms", wrapper.GetUntisRooms)
 	m.HandleFunc("GET "+options.BaseURL+"/untis/subjects", wrapper.GetUntisSubjects)
 	m.HandleFunc("GET "+options.BaseURL+"/untis/teachers", wrapper.GetUntisTeachers)
+	m.HandleFunc("PUT "+options.BaseURL+"/user/untisAcc", wrapper.PutUserUntisAcc)
 	m.HandleFunc("GET "+options.BaseURL+"/users", wrapper.GetUsers)
 	m.HandleFunc("POST "+options.BaseURL+"/users", wrapper.PostUsers)
 	m.HandleFunc("DELETE "+options.BaseURL+"/users/{userId}", wrapper.DeleteUsersUserId)
