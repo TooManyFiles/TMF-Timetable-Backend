@@ -2,6 +2,7 @@ package untisDataCollectors
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"time"
 
@@ -17,23 +18,22 @@ type UntisClient struct {
 
 func Init(apiConfig structs.ApiConfig) (UntisClient, error) {
 	untisClient := UntisClient{
-		staticClient:  untisApi.NewClient(apiConfig),
-		dynamicClient: untisApi.NewClient(apiConfig),
+		staticClient:  untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG),
+		dynamicClient: untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG),
 	}
 	err := untisClient.staticClient.Authenticate()
 	if err != nil {
 		return UntisClient{}, err
 	}
 	untisClient.staticClient.Test()
-	// untisClient.client.Logout()
 	return untisClient, nil
 }
 
 func (untisClient UntisClient) reAuthenticate() error {
 	err := untisClient.staticClient.Test()
 	if err != nil {
-		var rpcerr structs.RPCError
-		if errors.As(err, rpcerr) && rpcerr.Code == -8520 { //TODO: Test
+		var rpcerr *structs.RPCError
+		if errors.As(err, &rpcerr) && rpcerr.Code == -8520 {
 			return untisClient.staticClient.Authenticate()
 		}
 		return err
@@ -116,11 +116,12 @@ func (untisClient UntisClient) GetLessonsByClass(class dbModels.Class, startDate
 }
 
 func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisPWD string, startDate time.Time, endDate time.Time) ([]structs.Period, error) {
-	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
 	dynamicClient.ApiConfig.User = student.UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err := dynamicClient.Authenticate()
 	if err != nil {
+		dynamicClient.Logout()
 		return nil, err
 	}
 	body := structs.GetTimetableRequest{
@@ -144,8 +145,10 @@ func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisP
 	}
 	lessons, err := dynamicClient.GetTimetable(body)
 	if err != nil {
+		dynamicClient.Logout()
 		return nil, err
 	}
+	dynamicClient.Logout()
 	return lessons, nil
 }
 
@@ -171,17 +174,20 @@ func (untisClient UntisClient) SetupStudent(user *dbModels.User, forename string
 		return err
 	}
 	student := findPerson(students, forename, surname)
-	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
 	dynamicClient.ApiConfig.User = user.UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err = dynamicClient.Authenticate()
 	if err != nil {
+		dynamicClient.Logout()
 		return err
 	}
 	if student.ID == dynamicClient.PersonID {
 		user.UntisId = dynamicClient.PersonID
+		dynamicClient.Logout()
 		return nil
 	} else {
+		dynamicClient.Logout()
 		return ErrStudentNotFound
 	}
 }
