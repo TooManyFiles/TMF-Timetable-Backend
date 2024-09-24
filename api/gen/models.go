@@ -145,10 +145,9 @@ type GetCafeteriaParams struct {
 
 // PostLoginJSONBody defines parameters for PostLogin.
 type PostLoginJSONBody struct {
-	Email *string `json:"email,omitempty"`
-
 	// Password yourpassword hashed with SHA256
 	Password *string `json:"password,omitempty"`
+	Username *string `json:"username,omitempty"`
 }
 
 // PutUserUntisAccJSONBody defines parameters for PutUserUntisAcc.

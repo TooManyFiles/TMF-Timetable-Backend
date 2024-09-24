@@ -57,7 +57,7 @@ func (database *Database) CreateSession(body gen.PostLoginJSONBody, cxt context.
 	var user dbModels.User
 	query := database.DB.NewSelect()
 	query.Model(&user)
-	query.Where("\"user\".\"email\" = ?", body.Email)
+	query.Where("\"user\".\"name\" = ?", body.Username)
 	query.Relation("DefaultChoice")
 	err := query.Scan(cxt) //sql.ErrNoRows
 	if err != nil {
