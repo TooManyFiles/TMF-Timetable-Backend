@@ -209,6 +209,18 @@ type Lesson struct {
 	LastUpdate    time.Time
 }
 
+var _ bun.BeforeAppendModelHook = (*Lesson)(nil)
+
+func (l *Lesson) BeforeAppendModel(ctx context.Context, query bun.Query) error {
+	switch query.(type) {
+	case *bun.InsertQuery:
+		l.LastUpdate = time.Now()
+	case *bun.UpdateQuery:
+		l.LastUpdate = time.Now()
+	}
+	return nil
+}
+
 func (lesson *Lesson) ToGen() gen.Lesson {
 	intSubjects := make([]int, len(lesson.Subjects))
 	for i, s := range lesson.Subjects {
@@ -407,7 +419,7 @@ func (choice *Choice) FromGen(genChoice gen.Choice) Choice {
 	if genChoice.Id != nil {
 		choice.Id = int(*genChoice.Id)
 	}
-	if *genChoice.Name != "" {
+	if genChoice.Name != nil && *genChoice.Name != "" {
 		choice.Name = *genChoice.Name
 	}
 	if genChoice.UserId != nil {
@@ -421,8 +433,10 @@ func (choice *Choice) FromGen(genChoice gen.Choice) Choice {
 }
 
 type LessonFilter struct {
-	Choice Choice
-	User   User
+	Choice    Choice
+	User      User
+	StartDate time.Time
+	EndDate   time.Time
 }
 type Menu struct {
 	bun.BaseModel `bun:"table:menu"`

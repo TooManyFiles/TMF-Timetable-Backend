@@ -76,6 +76,22 @@ func (database *Database) GetUserByID(id int, ctx context.Context) (gen.User, er
 	return user.ToGen(), nil
 
 }
+func (database *Database) fetchUser(user *dbModels.User, ctx context.Context) error {
+	query := database.DB.NewSelect()
+	query.Model(user)
+	query.WherePK()
+	query.Relation("DefaultChoice")
+	err := query.Scan(ctx) //sql.ErrNoRows
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return dbModels.ErrUserNotFound
+		}
+		return err
+	}
+	return nil
+
+}
 func (database *Database) DeleteUserByID(id int, ctx context.Context) error {
 	var user dbModels.User
 	query := database.DB.NewDelete()
@@ -139,7 +155,9 @@ func (database *Database) UpdateUntisLogin(genUser gen.User, untisName string, f
 	return nil
 }
 
-func (database *Database) GetUntisLogin(user dbModels.User, key []byte, ctx context.Context) (string, error) {
+func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx context.Context) (string, error) {
+	var user dbModels.User
+	user.FromGen(genUser)
 	query := database.DB.NewSelect()
 	query.Model(&user)
 	query.WherePK()
@@ -164,7 +182,7 @@ func (database *Database) GetUntisLogin(user dbModels.User, key []byte, ctx cont
 
 	return string(decryptData), nil
 }
-func (database *Database) GetUntisLoginByHeader(user dbModels.User, AuthorizationHeader string, ctx context.Context) (string, error) {
+func (database *Database) GetUntisLoginByHeader(AuthorizationHeader string, ctx context.Context) (string, error) {
 	token := AuthorizationHeader
 	if len(token) > 7 && token[:7] == "Bearer " {
 		token = token[7:]
@@ -172,11 +190,11 @@ func (database *Database) GetUntisLoginByHeader(user dbModels.User, Authorizatio
 		if err != nil {
 			return "", err
 		}
-		key, err := base64.RawStdEncoding.DecodeString(claims.CryptoKey)
+		key, err := base64.StdEncoding.DecodeString(claims.CryptoKey)
 		if err != nil {
 			return "", err
 		}
-		return database.GetUntisLogin(user, key, ctx)
+		return database.GetUntisLogin(user.ToGen(), key, ctx)
 	}
 	return "", dbModels.ErrInvalidToken
 

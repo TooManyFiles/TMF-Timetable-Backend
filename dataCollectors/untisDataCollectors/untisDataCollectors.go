@@ -115,7 +115,7 @@ func (untisClient UntisClient) GetLessonsByClass(class dbModels.Class, startDate
 	return lessons, nil
 }
 
-func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisPWD string, startDate time.Time, endDate time.Time) ([]structs.Period, error) {
+func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisPWD string, startDate time.Time, endDate time.Time, classId int) ([]structs.Period, error) {
 	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
 	dynamicClient.ApiConfig.User = student.UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
@@ -126,8 +126,8 @@ func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisP
 	}
 	body := structs.GetTimetableRequest{
 		Element: structs.GetTimetableRequestElement{
-			Type: 5,
-			Id:   student.UntisId,
+			Type: 1,
+			Id:   classId,
 		},
 		ShowBooking:   true,
 		ShowInfo:      true,
