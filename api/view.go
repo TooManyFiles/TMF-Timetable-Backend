@@ -39,7 +39,7 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 	enddate := time.Time(startdate)
 	enddate = enddate.AddDate(0, 0, *params.Duration)
 	for _, classId := range *user.Classes {
-		server.DB.FetchLesson(user, untis_pwd, classId, startdate, enddate, r.Context()) //TODO: change 4454
+		server.DB.FetchLesson(user, untis_pwd, classId, startdate, enddate, r.Context())
 	}
 
 	lessonFilter := dbModels.LessonFilter{
