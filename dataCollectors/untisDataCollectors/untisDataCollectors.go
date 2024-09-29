@@ -141,7 +141,7 @@ func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisP
 	if endDate.IsZero() {
 		body.EndDate, _ = strconv.Atoi(startDate.AddDate(0, 0, 7).Local().Format("20060102"))
 	} else {
-		body.StartDate, _ = strconv.Atoi(startDate.Local().Format("20060102"))
+		body.EndDate, _ = strconv.Atoi(endDate.Local().Format("20060102"))
 	}
 	lessons, err := dynamicClient.GetTimetable(body)
 	if err != nil {

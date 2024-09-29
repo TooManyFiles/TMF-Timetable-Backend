@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -199,14 +200,29 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 		if err != nil {
 			return err
 		}
+		substitutionText := period.SubstitutionText
+		chairUp := false
+		re := regexp.MustCompile(`Bitte aufstuhlen!*`) // TODO: To config
+		if re.MatchString(substitutionText) {
+			substitutionText = re.ReplaceAllString(substitutionText, "")
+			chairUp = true
+		}
 		lessons[i] = dbModels.Lesson{
-			Id:        period.Id,
-			Subjects:  subjectIds,
-			Classes:   classIds,
-			Teachers:  teacherIds,
-			Rooms:     roomIds,
-			StartTime: startTime,
-			EndTime:   endTime,
+			Id:                    period.Id,
+			Subjects:              subjectIds,
+			Classes:               classIds,
+			Teachers:              teacherIds,
+			Rooms:                 roomIds,
+			StartTime:             startTime,
+			EndTime:               endTime,
+			Cancelled:             (period.Code == "cancelled"),
+			Irregular:             (period.Code == "irregular"),
+			LessonType:            gen.LessonLessonType(period.LessonType),
+			AdditionalInformation: period.Info,
+			SubstitutionText:      substitutionText,
+			LessonText:            period.LessonText,
+			BookingText:           period.BookingText,
+			ChairUp:               chairUp,
 		}
 	}
 	lessonQuery := database.DB.NewInsert()
