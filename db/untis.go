@@ -199,14 +199,24 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 		if err != nil {
 			return err
 		}
+		additionalInformation := ""
+		additionalInformation += period.SubstitutionText + "\n"
+		additionalInformation += period.Info + "\n"
+		additionalInformation += period.LessonText + "\n"
+		additionalInformation += period.StatisticalFlags + "\n"
+		additionalInformation += period.BookingText + "\n"
 		lessons[i] = dbModels.Lesson{
-			Id:        period.Id,
-			Subjects:  subjectIds,
-			Classes:   classIds,
-			Teachers:  teacherIds,
-			Rooms:     roomIds,
-			StartTime: startTime,
-			EndTime:   endTime,
+			Id:                    period.Id,
+			Subjects:              subjectIds,
+			Classes:               classIds,
+			Teachers:              teacherIds,
+			Rooms:                 roomIds,
+			StartTime:             startTime,
+			EndTime:               endTime,
+			Cancelled:             (period.Code == "cancelled"),
+			Irregular:             (period.Code == "irregular"),
+			LessonType:            gen.LessonLessonType(period.LessonType),
+			AdditionalInformation: additionalInformation,
 		}
 	}
 	lessonQuery := database.DB.NewInsert()

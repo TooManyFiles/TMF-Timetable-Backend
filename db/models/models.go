@@ -207,6 +207,12 @@ type Lesson struct {
 	StartTime     time.Time // Date-time format in Go can be parsed as time.Time
 	EndTime       time.Time
 	LastUpdate    time.Time
+	Cancelled     bool   `json:"cancelled,omitempty"`
+	Homework      string `json:"homework,omitempty"`
+	Irregular     bool   `json:"irregular,omitempty"`
+	// LessonType //„ls“ (lesson) | „oh“ (office hour) | „sb“ (standby) | „bs“ (break supervision) | „ex“(examination)  omitted if lesson
+	LessonType            gen.LessonLessonType `json:"lessonType"`
+	AdditionalInformation string
 }
 
 var _ bun.BeforeAppendModelHook = (*Lesson)(nil)
@@ -252,14 +258,18 @@ func (lesson *Lesson) ToGen() gen.Lesson {
 	}
 
 	return gen.Lesson{
-		Id:         &lesson.Id,
-		Subjects:   &intSubjects,
-		Classes:    &intClasses,
-		Teachers:   &intTeachers,
-		Rooms:      &intRooms,
-		StartTime:  lesson.StartTime,
-		EndTime:    lesson.EndTime,
-		LastUpdate: &lesson.LastUpdate,
+		Id:                    &lesson.Id,
+		Subjects:              &intSubjects,
+		Classes:               &intClasses,
+		Teachers:              &intTeachers,
+		Rooms:                 &intRooms,
+		StartTime:             lesson.StartTime,
+		EndTime:               lesson.EndTime,
+		LastUpdate:            &lesson.LastUpdate,
+		Cancelled:             &lesson.Cancelled,
+		Irregular:             &lesson.Irregular,
+		LessonType:            lesson.LessonType,
+		AdditionalInformation: &lesson.AdditionalInformation,
 	}
 }
 func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
@@ -318,6 +328,11 @@ func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
 	if genLesson.LastUpdate != nil {
 		lesson.LastUpdate = *genLesson.LastUpdate
 	}
+	//TOD: add
+	// Cancelled:             &lesson.Cancelled,
+	// Irregular:             &lesson.Irregular,
+	// LessonType:            lesson.LessonType,
+	// AdditionalInformation: &lesson.AdditionalInformation,
 	return *lesson
 }
 
