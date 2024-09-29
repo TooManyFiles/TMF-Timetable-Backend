@@ -209,6 +209,5 @@ func LoadConfig() error {
 	if err := v.Unmarshal(&Config); err != nil {
 		return fmt.Errorf("unable to decode into struct: %w", err)
 	}
-	fmt.Println(v.AllSettings())
 	return nil
 }
