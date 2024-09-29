@@ -11,7 +11,19 @@ import (
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 )
 
+func checkUsernameCriteria(username string) bool {
+	if len(username) >= 5 {
+		return true
+	}
+	return false
+}
 func (database *Database) CreateUser(user gen.User, pwd string, ctx context.Context) (gen.User, error) {
+	if !checkUsernameCriteria(user.Name) {
+		return gen.User{}, dbModels.ErrUsernameNotMachRequirements
+	}
+	if len(pwd) == 0 {
+		return gen.User{}, dbModels.ErrPasswordNotMachRequirements
+	}
 	// unset DefaultChoice.Id to Prevent Collisions
 	if user.DefaultChoice == nil {
 		name := "Default"
@@ -21,6 +33,7 @@ func (database *Database) CreateUser(user gen.User, pwd string, ctx context.Cont
 			Choice: &choice,
 		}
 	} else {
+		// unset DefaultChoice.Id to Prevent Collisions
 		user.DefaultChoice.Id = nil
 	}
 	// Hash the password with bcrypt

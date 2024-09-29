@@ -51,6 +51,8 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Internal server error."+pgErr.Field('C'), http.StatusInternalServerError)
 				log.Printf("Error type: %T, Details: %s", err, err.Error())
 			}
+		} else if errors.Is(err, dbModels.ErrUsernameNotMachRequirements) {
+			http.Error(w, " Username dose not match the requirements.", http.StatusUnprocessableEntity)
 		} else if errors.Is(err, dbModels.ErrPasswordNotMachRequirements) {
 			http.Error(w, " Password dose not match the requirements.", http.StatusUnprocessableEntity)
 		} else if errors.Is(err, bcrypt.ErrPasswordTooLong) {
