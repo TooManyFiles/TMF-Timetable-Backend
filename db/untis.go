@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -199,12 +200,13 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 		if err != nil {
 			return err
 		}
-		additionalInformation := ""
-		additionalInformation += period.SubstitutionText + "\n"
-		additionalInformation += period.Info + "\n"
-		additionalInformation += period.LessonText + "\n"
-		additionalInformation += period.StatisticalFlags + "\n"
-		additionalInformation += period.BookingText + "\n"
+		substitutionText := period.SubstitutionText
+		chairUp := false
+		re := regexp.MustCompile(`Bitte aufstuhlen!*`) // TODO: To config
+		if re.MatchString(substitutionText) {
+			substitutionText = re.ReplaceAllString(substitutionText, "")
+			chairUp = true
+		}
 		lessons[i] = dbModels.Lesson{
 			Id:                    period.Id,
 			Subjects:              subjectIds,
@@ -216,7 +218,11 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 			Cancelled:             (period.Code == "cancelled"),
 			Irregular:             (period.Code == "irregular"),
 			LessonType:            gen.LessonLessonType(period.LessonType),
-			AdditionalInformation: additionalInformation,
+			AdditionalInformation: period.Info,
+			SubstitutionText:      substitutionText,
+			LessonText:            period.LessonText,
+			BookingText:           period.BookingText,
+			ChairUp:               chairUp,
 		}
 	}
 	lessonQuery := database.DB.NewInsert()

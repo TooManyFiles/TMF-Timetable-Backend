@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -16,6 +17,32 @@ var ErrUserNotFound = errors.New("db: User not found")
 var ErrInvalidPassword = errors.New("db: The Password is wrong")
 var ErrInvalidToken = errors.New("db: The Token is invalid")
 var ErrChoiceNotFound = errors.New("db: Choice not found")
+
+func getPointerIfNotEmpty[T any](v T) *T {
+	val := reflect.ValueOf(v)
+
+	// Check if the value is zero (e.g., nil or empty)
+	switch val.Kind() {
+	case reflect.Slice, reflect.Array:
+		if val.Len() > 0 {
+			return &v
+		}
+	case reflect.String:
+		if strVal, ok := any(v).(string); ok && strVal != "" {
+			return &v
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		// For numeric types, return a pointer regardless of the value
+		return &v
+	default:
+		if !val.IsZero() {
+			return &v
+		}
+	}
+	return nil
+}
 
 // Class model
 type Class struct {
@@ -35,12 +62,12 @@ type Class struct {
 
 func (class *Class) ToGen() gen.Class {
 	return gen.Class{
-		Id:                     &class.Id,
-		Name:                   &class.Name,
-		MainTeacherId:          &class.MainTeacherId,
-		SecondaryTeacherId:     &class.SecondaryTeacherId,
-		MainClassLeaderId:      &class.MainClassLeaderId,
-		SecondaryClassLeaderId: &class.SecondaryClassLeaderId,
+		Id:                     getPointerIfNotEmpty(class.Id),
+		Name:                   getPointerIfNotEmpty(class.Name),
+		MainTeacherId:          getPointerIfNotEmpty(class.MainTeacherId),
+		SecondaryTeacherId:     getPointerIfNotEmpty(class.SecondaryTeacherId),
+		MainClassLeaderId:      getPointerIfNotEmpty(class.MainClassLeaderId),
+		SecondaryClassLeaderId: getPointerIfNotEmpty(class.SecondaryClassLeaderId),
 	}
 }
 func (class *Class) FromGen(genClass gen.Class) Class {
@@ -129,21 +156,21 @@ func (user *User) ToGen() gen.User {
 	if user.DefaultChoice != nil {
 		choice := user.DefaultChoice.ToGen()
 		return gen.User{
-			Id:            &user.Id,
+			Id:            getPointerIfNotEmpty(user.Id),
 			Name:          user.Name,
-			Role:          &role,
-			DefaultChoice: &choice,
-			Classes:       &intClasses,
-			Email:         &user.Email,
+			Role:          getPointerIfNotEmpty(role),
+			DefaultChoice: getPointerIfNotEmpty(choice),
+			Classes:       getPointerIfNotEmpty(intClasses),
+			Email:         getPointerIfNotEmpty(user.Email),
 		}
 	}
 	return gen.User{
-		Id:            &user.Id,
+		Id:            getPointerIfNotEmpty(user.Id),
 		Name:          user.Name,
-		Role:          &role,
-		DefaultChoice: &gen.Choice{Id: &user.DefaultChoiceId},
-		Classes:       &intClasses,
-		Email:         &user.Email,
+		Role:          getPointerIfNotEmpty(role),
+		DefaultChoice: getPointerIfNotEmpty(gen.Choice{Id: &user.DefaultChoiceId}),
+		Classes:       getPointerIfNotEmpty(intClasses),
+		Email:         getPointerIfNotEmpty(user.Email),
 	}
 }
 
@@ -162,13 +189,13 @@ type Teacher struct {
 
 func (teacher *Teacher) ToGen() gen.Teacher {
 	return gen.Teacher{
-		Id:        &teacher.Id,
-		UserId:    &teacher.UserId,
-		Name:      &teacher.Name,
-		FirstName: &teacher.FirstName,
-		Pronoun:   &teacher.Pronoun,
-		Title:     &teacher.Title,
-		ShortName: &teacher.ShortName,
+		Id:        getPointerIfNotEmpty(teacher.Id),
+		UserId:    getPointerIfNotEmpty(teacher.UserId),
+		Name:      getPointerIfNotEmpty(teacher.Name),
+		FirstName: getPointerIfNotEmpty(teacher.FirstName),
+		Pronoun:   getPointerIfNotEmpty(teacher.Pronoun),
+		Title:     getPointerIfNotEmpty(teacher.Title),
+		ShortName: getPointerIfNotEmpty(teacher.ShortName),
 	}
 }
 func (teacher *Teacher) FromGen(genTeacher gen.Teacher) Teacher {
@@ -198,21 +225,25 @@ func (teacher *Teacher) FromGen(genTeacher gen.Teacher) Teacher {
 
 // Lesson model
 type Lesson struct {
-	bun.BaseModel `bun:"table:lesson"`
-	Id            int       `bun:"id,pk,autoincrement,notnull"`
-	Subjects      []string  `pg:",array"`
-	Classes       []string  `pg:",array"`
-	Teachers      []string  `pg:",array"`
-	Rooms         []string  `pg:",array"`
-	StartTime     time.Time // Date-time format in Go can be parsed as time.Time
-	EndTime       time.Time
-	LastUpdate    time.Time
-	Cancelled     bool   `json:"cancelled,omitempty"`
-	Homework      string `json:"homework,omitempty"`
-	Irregular     bool   `json:"irregular,omitempty"`
-	// LessonType //„ls“ (lesson) | „oh“ (office hour) | „sb“ (standby) | „bs“ (break supervision) | „ex“(examination)  omitted if lesson
-	LessonType            gen.LessonLessonType `json:"lessonType"`
+	bun.BaseModel         `bun:"table:lesson"`
+	Id                    int       `bun:"id,pk,autoincrement,notnull"`
+	Subjects              []string  `pg:",array"`
+	Classes               []string  `pg:",array"`
+	Teachers              []string  `pg:",array"`
+	Rooms                 []string  `pg:",array"`
+	StartTime             time.Time // Date-time format in Go can be parsed as time.Time
+	EndTime               time.Time
+	LastUpdate            time.Time
+	Cancelled             bool   `json:"cancelled,omitempty"`
+	Homework              string `json:"homework,omitempty"`
+	Irregular             bool   `json:"irregular,omitempty"`
+	ChairUp               bool
 	AdditionalInformation string
+	SubstitutionText      string
+	LessonText            string
+	BookingText           string
+	// LessonType //„ls“ (lesson) | „oh“ (office hour) | „sb“ (standby) | „bs“ (break supervision) | „ex“(examination)  omitted if lesson
+	LessonType gen.LessonLessonType `json:"lessonType"`
 }
 
 var _ bun.BeforeAppendModelHook = (*Lesson)(nil)
@@ -258,18 +289,23 @@ func (lesson *Lesson) ToGen() gen.Lesson {
 	}
 
 	return gen.Lesson{
-		Id:                    &lesson.Id,
-		Subjects:              &intSubjects,
-		Classes:               &intClasses,
-		Teachers:              &intTeachers,
-		Rooms:                 &intRooms,
+		Id:                    getPointerIfNotEmpty(lesson.Id),
+		Subjects:              getPointerIfNotEmpty(intSubjects),
+		Classes:               getPointerIfNotEmpty(intClasses),
+		Teachers:              getPointerIfNotEmpty(intTeachers),
+		Rooms:                 getPointerIfNotEmpty(intRooms),
 		StartTime:             lesson.StartTime,
 		EndTime:               lesson.EndTime,
-		LastUpdate:            &lesson.LastUpdate,
-		Cancelled:             &lesson.Cancelled,
-		Irregular:             &lesson.Irregular,
+		LastUpdate:            getPointerIfNotEmpty(lesson.LastUpdate),
+		Cancelled:             getPointerIfNotEmpty(lesson.Cancelled),
+		Irregular:             getPointerIfNotEmpty(lesson.Irregular),
 		LessonType:            lesson.LessonType,
-		AdditionalInformation: &lesson.AdditionalInformation,
+		AdditionalInformation: getPointerIfNotEmpty(lesson.AdditionalInformation),
+		BookingText:           getPointerIfNotEmpty(lesson.BookingText),
+		LessonText:            getPointerIfNotEmpty(lesson.LessonText),
+		SubstitutionText:      getPointerIfNotEmpty(lesson.SubstitutionText),
+		Homework:              getPointerIfNotEmpty(lesson.Homework),
+		ChairUp:               getPointerIfNotEmpty(lesson.ChairUp),
 	}
 }
 func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
@@ -307,6 +343,9 @@ func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
 	if lesson == nil {
 		lesson = &Lesson{}
 	}
+	if genLesson.Id != nil {
+		lesson.Id = *genLesson.Id
+	}
 	if genLesson.Subjects != nil {
 		lesson.Subjects = strSubjects
 	}
@@ -328,11 +367,33 @@ func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
 	if genLesson.LastUpdate != nil {
 		lesson.LastUpdate = *genLesson.LastUpdate
 	}
-	//TOD: add
-	// Cancelled:             &lesson.Cancelled,
-	// Irregular:             &lesson.Irregular,
-	// LessonType:            lesson.LessonType,
-	// AdditionalInformation: &lesson.AdditionalInformation,
+	if genLesson.Cancelled != nil {
+		lesson.Cancelled = *genLesson.Cancelled
+	}
+	if genLesson.Irregular != nil {
+		lesson.Irregular = *genLesson.Irregular
+	}
+	if genLesson.LessonType != "" {
+		lesson.LessonType = genLesson.LessonType
+	}
+	if genLesson.AdditionalInformation != nil {
+		lesson.AdditionalInformation = *genLesson.AdditionalInformation
+	}
+	if genLesson.BookingText != nil {
+		lesson.BookingText = *genLesson.BookingText
+	}
+	if genLesson.LessonText != nil {
+		lesson.LessonText = *genLesson.LessonText
+	}
+	if genLesson.SubstitutionText != nil {
+		lesson.SubstitutionText = *genLesson.SubstitutionText
+	}
+	if genLesson.Homework != nil {
+		lesson.Homework = *genLesson.Homework
+	}
+	if genLesson.ChairUp != nil {
+		lesson.ChairUp = *genLesson.ChairUp
+	}
 	return *lesson
 }
 
@@ -346,9 +407,9 @@ type Room struct {
 
 func (room *Room) ToGen() gen.Room {
 	return gen.Room{
-		Id:                    &room.Id,
-		Name:                  &room.Name,
-		AdditionalInformation: &room.AdditionalInformation,
+		Id:                    getPointerIfNotEmpty(room.Id),
+		Name:                  getPointerIfNotEmpty(room.Name),
+		AdditionalInformation: getPointerIfNotEmpty(room.AdditionalInformation),
 	}
 }
 func (room *Room) FromGen(genRoom gen.Room) Room {
@@ -378,9 +439,9 @@ type Subject struct {
 
 func (subject *Subject) ToGen() gen.Subject {
 	return gen.Subject{
-		Id:        &subject.Id,
-		Name:      &subject.Name,
-		ShortName: &subject.ShortName,
+		Id:        getPointerIfNotEmpty(subject.Id),
+		Name:      getPointerIfNotEmpty(subject.Name),
+		ShortName: getPointerIfNotEmpty(subject.ShortName),
 	}
 }
 func (subject *Subject) FromGen(genSubject gen.Subject) Subject {
@@ -415,16 +476,16 @@ func (choice *Choice) ToGen() gen.Choice {
 	err := json.Unmarshal([]byte(choice.Choice), &choiceMap)
 	if err != nil {
 		return gen.Choice{
-			Id:     &choice.Id,
-			Name:   &choice.Name,
-			UserId: &choice.UserId,
+			Id:     getPointerIfNotEmpty(choice.Id),
+			Name:   getPointerIfNotEmpty(choice.Name),
+			UserId: getPointerIfNotEmpty(choice.UserId),
 		}
 	}
 	return gen.Choice{
-		Id:     &choice.Id,
-		Name:   &choice.Name,
-		UserId: &choice.UserId,
-		Choice: &choiceMap,
+		Id:     getPointerIfNotEmpty(choice.Id),
+		Name:   getPointerIfNotEmpty(choice.Name),
+		UserId: getPointerIfNotEmpty(choice.UserId),
+		Choice: getPointerIfNotEmpty(choiceMap),
 	}
 }
 func (choice *Choice) FromGen(genChoice gen.Choice) Choice {
