@@ -22,12 +22,12 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 		http.Error(w, "Invalid request body.", http.StatusBadRequest)
 		return
 	}
-	user, _, err := server.isLoggedIn(w, r)
+	user, claims, err := server.isLoggedIn(w, r)
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	untis_pwd, err := server.DB.GetUntisLoginByHeader(r.Header.Get("Authorization"), r.Context())
+	untis_pwd, err := server.DB.GetUntisLoginByCryptoKey(claims.CryptoKey, user, r.Context())
 	if err != nil {
 		http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 		return

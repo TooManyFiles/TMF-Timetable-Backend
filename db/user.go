@@ -195,20 +195,12 @@ func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx contex
 
 	return string(decryptData), nil
 }
-func (database *Database) GetUntisLoginByHeader(AuthorizationHeader string, ctx context.Context) (string, error) {
-	token := AuthorizationHeader
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
-		user, claims, err := database.verifySession(token, ctx)
-		if err != nil {
-			return "", err
-		}
-		key, err := base64.StdEncoding.DecodeString(claims.CryptoKey)
-		if err != nil {
-			return "", err
-		}
-		return database.GetUntisLogin(user.ToGen(), key, ctx)
+func (database *Database) GetUntisLoginByCryptoKey(CryptoKey string, user gen.User, ctx context.Context) (string, error) {
+
+	key, err := base64.StdEncoding.DecodeString(CryptoKey)
+	if err != nil {
+		return "", err
 	}
-	return "", dbModels.ErrInvalidToken
+	return database.GetUntisLogin(user, key, ctx)
 
 }
