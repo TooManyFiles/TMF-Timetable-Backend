@@ -12,7 +12,10 @@ import (
 // Get events by a user
 // (PUT /view)
 func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.PutViewParams) {
-	if *params.Duration < 1 || *params.Duration > 7 {
+	if params.Duration == nil {
+		params.Duration = new(int)
+		*params.Duration = 1
+	} else if *params.Duration < 1 || *params.Duration > 7 {
 		http.Error(w, "Invalid request body. Duration out of bounce.", http.StatusBadRequest)
 		return
 	}
