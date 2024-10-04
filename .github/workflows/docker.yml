@@ -42,6 +42,6 @@ jobs:
       - name: Push Docker Image with version, minor, major, and latest tags
         run: |
           docker push ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.VERSION }}
-          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }}
-          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }}.${{ env.MINOR }}
+          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:v${{ env.MAJOR }}
+          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:v${{ env.MAJOR }}.${{ env.MINOR }}
           docker push ghcr.io/toomanyfiles/tmf-timetable-backend:latest
