@@ -15,9 +15,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         
+      - name: Extract version from tag and Extract major, minor, and patch versions
+        id: version_parts
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          IFS='.' read -r major minor patch <<< "${env.VERSION#v}"
+          echo "MAJOR=${major}" >> $GITHUB_ENV
+          echo "MINOR=${minor}" >> $GITHUB_ENV
+          echo "PATCH=${patch}" >> $GITHUB_ENV
+  
       - name: Build Docker Image
         run: |
-          docker build -t ghcr.io/toomanyfiles/tmf-timetable-backend .
+          docker build -t ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.VERSION }} \
+                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }} \
+                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }}.${{ env.MINOR }} \
+                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:latest .
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
@@ -26,6 +38,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push Docker Image
+      - name: Push Docker Image with version, minor, major, and latest tags
         run: |
-          docker push ghcr.io/toomanyfiles/tmf-timetable-backend
+          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.VERSION }}
+          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }}
+          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }}.${{ env.MINOR }}
+          docker push ghcr.io/toomanyfiles/tmf-timetable-backend:latest
