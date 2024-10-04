@@ -18,6 +18,7 @@ jobs:
       - name: Extract version from tag and Extract major, minor, and patch versions
         id: version_parts
         run: |
+          VERSION=${GITHUB_REF#refs/tags/}
           echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           IFS='.' read -r major minor patch <<< "${VERSION#v}"
           echo "MAJOR=${major}" >> $GITHUB_ENV
