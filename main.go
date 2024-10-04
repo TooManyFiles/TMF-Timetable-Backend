@@ -52,7 +52,7 @@ func initServer() {
 		Debug:            true,
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		AllowedOrigins:   []string{"https://localhost:5500", "https://timetable.dev.toomanyfiles.dev", "*"},
+		AllowedOrigins:   []string{"https://localhost:5500", "https://timetable.dev.toomanyfiles.dev"},
 	}).Handler(h)
 
 	s := &http.Server{
