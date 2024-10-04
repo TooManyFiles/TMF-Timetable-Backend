@@ -28,8 +28,8 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.VERSION }} \
-                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }} \
-                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:${{ env.MAJOR }}.${{ env.MINOR }} \
+                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:v${{ env.MAJOR }} \
+                        -t ghcr.io/toomanyfiles/tmf-timetable-backend:v${{ env.MAJOR }}.${{ env.MINOR }} \
                         -t ghcr.io/toomanyfiles/tmf-timetable-backend:latest .
 
       - name: Log in to GitHub Container Registry
