@@ -222,6 +222,5 @@ func decrypt(encData []byte, key []byte) ([]byte, error) {
 
 	mode := cipher.NewCBCDecrypter(block, []byte(config.Config.Crypto.Untis.FixedIV))
 	mode.CryptBlocks(encData, encData)
-
 	return unpad(encData) // Unpad after decryption
 }

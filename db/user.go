@@ -187,7 +187,9 @@ func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx contex
 	if err != nil {
 		return "", err
 	}
-
+	if len(untisPWD) == 0 {
+		return "", errors.New("no untis login")
+	}
 	decryptData, err := decrypt(untisPWD, key)
 	if err != nil {
 		return "", err

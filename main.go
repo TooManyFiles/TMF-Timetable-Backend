@@ -47,10 +47,12 @@ func initServer() {
 	// get an `http.Handler` that we can use
 	h := gen.HandlerFromMux(server, r)
 	handler := cors.New(cors.Options{
-		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions, http.MethodPut},
-		Logger:         log.Default(),
-		Debug:          true,
-		AllowedHeaders: []string{"*"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions, http.MethodPut},
+		Logger:           log.Default(),
+		Debug:            true,
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		AllowedOrigins:   []string{"https://localhost:5500", "*", "https://timetable.dev.toomanyfiles.dev"},
 	}).Handler(h)
 
 	s := &http.Server{

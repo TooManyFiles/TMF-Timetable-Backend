@@ -58,9 +58,16 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 		http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	out := struct {
+		Untis interface{} `json:untis`
+	}{
+		Untis: &resp,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(resp)
+
+	_ = json.NewEncoder(w).Encode(out)
 }
 
 // Get events of a week by a user
@@ -105,7 +112,14 @@ func (server Server) PutViewUserUserId(w http.ResponseWriter, r *http.Request, u
 		http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	out := struct {
+		Untis interface{} `json:untis`
+	}{
+		Untis: &resp,
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(resp)
+
+	_ = json.NewEncoder(w).Encode(out)
 }
