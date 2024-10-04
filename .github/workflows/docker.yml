@@ -14,12 +14,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        
+
       - name: Extract version from tag and Extract major, minor, and patch versions
         id: version_parts
         run: |
           echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          IFS='.' read -r major minor patch <<< "${env.VERSION#v}"
+          IFS='.' read -r major minor patch <<< "${VERSION#v}"
           echo "MAJOR=${major}" >> $GITHUB_ENV
           echo "MINOR=${minor}" >> $GITHUB_ENV
           echo "PATCH=${patch}" >> $GITHUB_ENV
