@@ -145,6 +145,7 @@ func (database *Database) FetchClasses(ctx context.Context) error {
 // MergeDateAndTime takes a date in YYYYMMDD format and a start time in HHMM format
 // and returns a time.Time object.
 func MergeDateAndTime(periodDate int, periodTime int) (time.Time, error) {
+
 	// Convert periodDate to string and parse to time.Time
 	dateStr := strconv.Itoa(periodDate)
 	date, err := time.Parse("20060102", dateStr)
@@ -158,8 +159,7 @@ func MergeDateAndTime(periodDate int, periodTime int) (time.Time, error) {
 	minutes, _ := strconv.Atoi(startTimeStr[2:])
 
 	// Combine date with start time
-	combinedTime := time.Date(date.Year(), date.Month(), date.Day(), hours, minutes, 0, 0, date.Location())
-
+	combinedTime := time.Date(date.Year(), date.Month(), date.Day(), hours, minutes, 0, 0, time.Local)
 	return combinedTime, nil
 }
 
