@@ -157,9 +157,14 @@ func MergeDateAndTime(periodDate int, periodTime int) (time.Time, error) {
 	startTimeStr := fmt.Sprintf("%04d", periodTime) // Ensure it's 4 digits
 	hours, _ := strconv.Atoi(startTimeStr[:2])
 	minutes, _ := strconv.Atoi(startTimeStr[2:])
+	// Load German timezone (CET/CEST)
+	location, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error loading timezone: %w", err)
+	}
 
 	// Combine date with start time
-	combinedTime := time.Date(date.Year(), date.Month(), date.Day(), hours, minutes, 0, 0, time.Local)
+	combinedTime := time.Date(date.Year(), date.Month(), date.Day(), hours, minutes, 0, 0, location)
 	return combinedTime, nil
 }
 
