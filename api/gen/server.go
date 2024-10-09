@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ServerInterface represents all server handlers.
@@ -75,6 +76,9 @@ type ServerInterface interface {
 	// Get events of a week by a user
 	// (PUT /view/user/{userId})
 	PutViewUserUserId(w http.ResponseWriter, r *http.Request, userId int, params PutViewUserUserIdParams)
+	// Gets the subtile for the week the date is include.
+	// (GET /week/{date})
+	GetWeekDate(w http.ResponseWriter, r *http.Request, date openapi_types.Date)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -630,6 +634,37 @@ func (siw *ServerInterfaceWrapper) PutViewUserUserId(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// GetWeekDate operation middleware
+func (siw *ServerInterfaceWrapper) GetWeekDate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "date" -------------
+	var date openapi_types.Date
+
+	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: false})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetWeekDate(w, r, date)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -770,6 +805,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("POST "+options.BaseURL+"/users/{userId}/choices/{choiceId}", wrapper.PostUsersUserIdChoicesChoiceId)
 	m.HandleFunc("PUT "+options.BaseURL+"/view", wrapper.PutView)
 	m.HandleFunc("PUT "+options.BaseURL+"/view/user/{userId}", wrapper.PutViewUserUserId)
+	m.HandleFunc("GET "+options.BaseURL+"/week/{date}", wrapper.GetWeekDate)
 
 	return m
 }

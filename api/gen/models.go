@@ -33,12 +33,14 @@ const (
 const (
 	PutViewJSONBodyProviderCafeteria PutViewJSONBodyProvider = "cafeteria"
 	PutViewJSONBodyProviderUntis     PutViewJSONBodyProvider = "untis"
+	PutViewJSONBodyProviderWeek      PutViewJSONBodyProvider = "week"
 )
 
 // Defines values for PutViewUserUserIdJSONBodyProvider.
 const (
 	PutViewUserUserIdJSONBodyProviderCafeteria PutViewUserUserIdJSONBodyProvider = "cafeteria"
 	PutViewUserUserIdJSONBodyProviderUntis     PutViewUserUserIdJSONBodyProvider = "untis"
+	PutViewUserUserIdJSONBodyProviderWeek      PutViewUserUserIdJSONBodyProvider = "week"
 )
 
 // Choice Choice of subjects for the classes. {class:[subjects]}
@@ -78,6 +80,10 @@ type Lesson struct {
 
 	// LessonType //„ls“ (lesson) | „oh“ (office hour) | „sb“ (standby) | „bs“ (break supervision) | „ex“(examination)  omitted if lesson
 	LessonType       LessonLessonType `json:"lessonType"`
+	OrigClasses      *[]int           `json:"origClasses,omitempty"`
+	OrigRooms        *[]int           `json:"origRooms,omitempty"`
+	OrigSubjects     *[]int           `json:"origSubjects,omitempty"`
+	OrigTeachers     *[]int           `json:"origTeachers,omitempty"`
 	Rooms            *[]int           `json:"rooms,omitempty"`
 	StartTime        time.Time        `json:"startTime"`
 	Subjects         *[]int           `json:"subjects,omitempty"`
@@ -140,6 +146,9 @@ type User struct {
 
 // UserRole defines model for User.Role.
 type UserRole string
+
+// Week Week subtitle for the Week the date(startDate) is in.
+type Week = string
 
 // GetCafeteriaParams defines parameters for GetCafeteria.
 type GetCafeteriaParams struct {
