@@ -197,6 +197,22 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 		for _, room := range period.Rooms {
 			roomIds = append(roomIds, fmt.Sprintf("%d", room.ID))
 		}
+		var subjectOriginalIds []string
+		for _, subject := range period.Subjects {
+			subjectOriginalIds = append(subjectOriginalIds, fmt.Sprintf("%d", subject.ID))
+		}
+		var classOriginalIds []string
+		for _, class := range period.Classes {
+			classOriginalIds = append(classOriginalIds, fmt.Sprintf("%d", class.ID))
+		}
+		var teacherOriginalIds []string
+		for _, teacher := range period.OriginalTeachers {
+			teacherOriginalIds = append(teacherOriginalIds, fmt.Sprintf("%d", teacher.ID))
+		}
+		var roomOriginalIds []string
+		for _, room := range period.Rooms {
+			roomOriginalIds = append(roomOriginalIds, fmt.Sprintf("%d", room.ID))
+		}
 		startTime, err := MergeDateAndTime(period.Date, period.StartTime)
 		if err != nil {
 			return err
@@ -218,6 +234,10 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 			Classes:               classIds,
 			Teachers:              teacherIds,
 			Rooms:                 roomIds,
+			OriginalSubjects:      subjectOriginalIds,
+			OriginalClasses:       classOriginalIds,
+			OriginalTeachers:      teacherOriginalIds,
+			OriginalRooms:         roomOriginalIds,
 			StartTime:             startTime,
 			EndTime:               endTime,
 			Cancelled:             (period.Code == "cancelled"),
