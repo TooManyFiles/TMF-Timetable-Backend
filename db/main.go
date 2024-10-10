@@ -55,6 +55,7 @@ func (database *Database) createSchema(ctx context.Context) error {
 		&dbModels.Subject{},
 		&dbModels.Choice{},
 		&dbModels.Menu{},
+		&dbModels.WeekSubtitle{},
 	}
 
 	for _, model := range models {
