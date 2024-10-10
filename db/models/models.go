@@ -232,6 +232,10 @@ type Lesson struct {
 	Classes               []string  `pg:",array"`
 	Teachers              []string  `pg:",array"`
 	Rooms                 []string  `pg:",array"`
+	OriginalSubjects      []string  `pg:",array"`
+	OriginalClasses       []string  `pg:",array"`
+	OriginalTeachers      []string  `pg:",array"`
+	OriginalRooms         []string  `pg:",array"`
 	StartTime             time.Time // Date-time format in Go can be parsed as time.Time
 	EndTime               time.Time
 	LastUpdate            time.Time
@@ -288,6 +292,34 @@ func (lesson *Lesson) ToGen() gen.Lesson {
 			intRooms[i] = num
 		}
 	}
+	intOriginalSubjects := make([]int, len(lesson.OriginalSubjects))
+	for i, s := range lesson.OriginalSubjects {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intOriginalSubjects[i] = num
+		}
+	}
+	intOriginalClasses := make([]int, len(lesson.OriginalClasses))
+	for i, s := range lesson.OriginalClasses {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intOriginalClasses[i] = num
+		}
+	}
+	intOriginalTeachers := make([]int, len(lesson.OriginalTeachers))
+	for i, s := range lesson.OriginalTeachers {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intOriginalTeachers[i] = num
+		}
+	}
+	intOriginalRooms := make([]int, len(lesson.OriginalRooms))
+	for i, s := range lesson.OriginalRooms {
+		num, err := strconv.Atoi(s)
+		if err == nil {
+			intOriginalRooms[i] = num
+		}
+	}
 
 	return gen.Lesson{
 		Id:                    getPointerIfNotEmpty(lesson.Id),
@@ -295,6 +327,10 @@ func (lesson *Lesson) ToGen() gen.Lesson {
 		Classes:               getPointerIfNotEmpty(intClasses),
 		Teachers:              getPointerIfNotEmpty(intTeachers),
 		Rooms:                 getPointerIfNotEmpty(intRooms),
+		OrigSubjects:          getPointerIfNotEmpty(intOriginalSubjects),
+		OrigClasses:           getPointerIfNotEmpty(intOriginalClasses),
+		OrigTeachers:          getPointerIfNotEmpty(intOriginalTeachers),
+		OrigRooms:             getPointerIfNotEmpty(intOriginalRooms),
 		StartTime:             lesson.StartTime,
 		EndTime:               lesson.EndTime,
 		LastUpdate:            getPointerIfNotEmpty(lesson.LastUpdate),
@@ -341,6 +377,37 @@ func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
 		strRooms[i] = num
 
 	}
+	// Convert Subjects
+	strOriginalSubjects := make([]string, len(*genLesson.OrigSubjects))
+	for i, s := range *genLesson.OrigSubjects {
+		num := strconv.Itoa(s)
+		strOriginalSubjects[i] = num
+
+	}
+
+	// Convert Classes
+	strOriginalClasses := make([]string, len(*genLesson.OrigClasses))
+	for i, s := range *genLesson.OrigClasses {
+		num := strconv.Itoa(s)
+		strOriginalClasses[i] = num
+
+	}
+
+	// Convert Teachers
+	strOriginalTeachers := make([]string, len(*genLesson.OrigTeachers))
+	for i, s := range *genLesson.OrigTeachers {
+		num := strconv.Itoa(s)
+		strOriginalTeachers[i] = num
+
+	}
+
+	// Convert Rooms
+	strOriginalRooms := make([]string, len(*genLesson.OrigRooms))
+	for i, s := range *genLesson.OrigRooms {
+		num := strconv.Itoa(s)
+		strOriginalRooms[i] = num
+
+	}
 	if lesson == nil {
 		lesson = &Lesson{}
 	}
@@ -358,6 +425,18 @@ func (lesson *Lesson) FromGen(genLesson gen.Lesson) Lesson {
 	}
 	if genLesson.Rooms != nil {
 		lesson.Rooms = strRooms
+	}
+	if genLesson.OrigSubjects != nil {
+		lesson.OriginalSubjects = strOriginalSubjects
+	}
+	if genLesson.OrigClasses != nil {
+		lesson.OriginalClasses = strOriginalClasses
+	}
+	if genLesson.OrigTeachers != nil {
+		lesson.OriginalTeachers = strOriginalTeachers
+	}
+	if genLesson.OrigRooms != nil {
+		lesson.OriginalRooms = strOriginalRooms
 	}
 	if genLesson.StartTime.IsZero() {
 		lesson.StartTime = genLesson.StartTime
