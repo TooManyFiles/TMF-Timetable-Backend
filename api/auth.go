@@ -40,8 +40,8 @@ func (server Server) PostLogin(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_token",
 		Value:    resp.Token,
 		Path:     "/",
-		HttpOnly: true, // This makes the cookie inaccessible via JavaScript
-		Secure:   true, // Set to true if you're using HTTPS
+		HttpOnly: false, // This makes the cookie inaccessible via JavaScript
+		Secure:   true,  // Set to true if you're using HTTPS
 		SameSite: http.SameSiteNoneMode,
 	})
 	w.Header().Set("Content-Type", "application/json")
@@ -52,6 +52,14 @@ func (server Server) PostLogin(w http.ResponseWriter, r *http.Request) {
 // Logout and invalidate token
 // (POST /logout)
 func (server Server) PostLogout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: false, // This makes the cookie inaccessible via JavaScript
+		Secure:   true,  // Set to true if you're using HTTPS
+		SameSite: http.SameSiteNoneMode,
+	})
 	w.WriteHeader(http.StatusOK)
 	// _ = json.NewEncoder(w).Encode(resp)
 }
