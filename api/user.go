@@ -39,6 +39,10 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(log.Writer()).Encode(userWithPW)
+	if *userWithPW.UserData.Role != "student" && *userWithPW.UserData.Role != "teacher" {
+		role := gen.UserRoleStudent // this is of type gen.UserRole
+		userWithPW.UserData.Role = &role
+	}
 	resp, err := server.DB.CreateUser(*userWithPW.UserData, *userWithPW.Password, r.Context())
 
 	if err != nil {
