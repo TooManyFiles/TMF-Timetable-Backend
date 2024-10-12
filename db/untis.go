@@ -198,11 +198,11 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 			roomIds = append(roomIds, fmt.Sprintf("%d", room.ID))
 		}
 		var subjectOriginalIds []string
-		for _, subject := range period.Subjects {
+		for _, subject := range period.OriginalSubjects {
 			subjectOriginalIds = append(subjectOriginalIds, fmt.Sprintf("%d", subject.ID))
 		}
 		var classOriginalIds []string
-		for _, class := range period.Classes {
+		for _, class := range period.OriginalClasses {
 			classOriginalIds = append(classOriginalIds, fmt.Sprintf("%d", class.ID))
 		}
 		var teacherOriginalIds []string
@@ -210,7 +210,7 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 			teacherOriginalIds = append(teacherOriginalIds, fmt.Sprintf("%d", teacher.ID))
 		}
 		var roomOriginalIds []string
-		for _, room := range period.Rooms {
+		for _, room := range period.OriginalRooms {
 			roomOriginalIds = append(roomOriginalIds, fmt.Sprintf("%d", room.ID))
 		}
 		startTime, err := MergeDateAndTime(period.Date, period.StartTime)
