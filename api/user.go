@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"golang.org/x/crypto/bcrypt"
@@ -32,6 +33,10 @@ func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 // Create a new user
 // (POST /users)
 func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
+	if !config.Config.CanSignUp {
+		http.Error(w, "SignUp is currently disabled on this server.", http.StatusForbidden)
+		return
+	}
 	var userWithPW gen.PostUsersJSONRequestBody
 	err := json.NewDecoder(r.Body).Decode(&userWithPW)
 	if err != nil {

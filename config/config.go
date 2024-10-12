@@ -31,6 +31,7 @@ type ConfigStruct struct {
 	}
 
 	DatabaseConfig DatabaseConfig
+	CanSignUp      bool
 }
 
 var Config ConfigStruct = ConfigStruct{
@@ -66,6 +67,7 @@ var Config ConfigStruct = ConfigStruct{
 			School:    "school",
 		},
 	},
+	CanSignUp: true,
 }
 
 // Function to create a default config file if it doesn't exist and no env vars are set
