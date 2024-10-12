@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -39,6 +40,20 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(log.Writer()).Encode(userWithPW)
+	fmt.Println(userWithPW)
+	if userWithPW.UserData == nil || userWithPW.Password == nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if (userWithPW.UserData.Role != nil) &&
+		(*userWithPW.UserData.Role !=
+			gen.UserRole("student")) &&
+		(*userWithPW.UserData.Role !=
+			gen.UserRole("teacher")) {
+
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
 	resp, err := server.DB.CreateUser(*userWithPW.UserData, *userWithPW.Password, r.Context())
 
 	if err != nil {
