@@ -26,8 +26,12 @@ type ConfigStruct struct {
 		}
 	}
 	DataCollectors struct {
-		TFfoodplanAPIURL string
-		UntisApiConfig   goUntisAPIstructs.ApiConfig
+		TFfoodplanAPIURL            string
+		UntisApiConfig              goUntisAPIstructs.ApiConfig
+		WeekGoogleCalenderAPIConfig struct {
+			ApiKey     string
+			CalendarID string
+		}
 	}
 
 	DatabaseConfig DatabaseConfig
@@ -56,8 +60,12 @@ var Config ConfigStruct = ConfigStruct{
 		},
 	},
 	DataCollectors: struct {
-		TFfoodplanAPIURL string
-		UntisApiConfig   goUntisAPIstructs.ApiConfig
+		TFfoodplanAPIURL            string
+		UntisApiConfig              goUntisAPIstructs.ApiConfig
+		WeekGoogleCalenderAPIConfig struct {
+			ApiKey     string
+			CalendarID string
+		}
 	}{
 		TFfoodplanAPIURL: "http://www.treffpunkt-fanny.de/images/stories/dokumente/Essensplaene/api/TFfoodplanAPI.php",
 		UntisApiConfig: goUntisAPIstructs.ApiConfig{
@@ -66,6 +74,13 @@ var Config ConfigStruct = ConfigStruct{
 			Password:  "password",
 			Useragent: "client",
 			School:    "school",
+		},
+		WeekGoogleCalenderAPIConfig: struct {
+			ApiKey     string
+			CalendarID string
+		}{
+			ApiKey:     "API-KEy",
+			CalendarID: "primary",
 		},
 	},
 	CanSignUp:      true,

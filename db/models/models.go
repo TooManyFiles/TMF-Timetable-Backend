@@ -615,3 +615,9 @@ func (u *Menu) BeforeAppendModel(ctx context.Context, query bun.Query) error {
 	}
 	return nil
 }
+
+type WeekSubtitle struct {
+	bun.BaseModel `bun:"table:weeksubtitle"`
+	Date          time.Time `bun:"date,pk,unique,notnull,type:date" json:"date,omitempty"`
+	Subtitle      string    `json:"name,omitempty"`
+}
