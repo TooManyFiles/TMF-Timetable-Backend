@@ -4,10 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"golang.org/x/crypto/bcrypt"
@@ -31,6 +33,10 @@ func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 // Create a new user
 // (POST /users)
 func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
+	if !config.Config.CanSignUp {
+		http.Error(w, "SignUp is currently disabled on this server.", http.StatusForbidden)
+		return
+	}
 	var userWithPW gen.PostUsersJSONRequestBody
 	err := json.NewDecoder(r.Body).Decode(&userWithPW)
 	if err != nil {
@@ -39,6 +45,20 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(log.Writer()).Encode(userWithPW)
+	fmt.Println(userWithPW)
+	if userWithPW.UserData == nil || userWithPW.Password == nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if (userWithPW.UserData.Role != nil) &&
+		(*userWithPW.UserData.Role !=
+			gen.UserRole("student")) &&
+		(*userWithPW.UserData.Role !=
+			gen.UserRole("teacher")) {
+
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
 	resp, err := server.DB.CreateUser(*userWithPW.UserData, *userWithPW.Password, r.Context())
 
 	if err != nil {
