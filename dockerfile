@@ -11,8 +11,12 @@ RUN go mod download
 # Build the Go application for Linux
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tmf-timetable-backend main.go
 
+
 # Final Stage
 FROM alpine:latest
+
+# Install tzdata to get timezone information
+RUN apk add --no-cache tzdata
 
 # Set the working directory
 WORKDIR /app

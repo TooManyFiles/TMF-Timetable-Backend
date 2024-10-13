@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -42,7 +43,10 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 	enddate := time.Time(startdate)
 	enddate = enddate.AddDate(0, 0, *params.Duration)
 	for _, classId := range *user.Classes {
-		server.DB.FetchLesson(user, untis_pwd, classId, startdate, enddate, r.Context()) //TODO: change 4454
+		err = server.DB.FetchLesson(user, untis_pwd, classId, startdate, enddate, r.Context())
+		if err != nil {
+			fmt.Println("Failed to FetchLesson: " + err.Error())
+		}
 	}
 
 	lessonFilter := dbModels.LessonFilter{
