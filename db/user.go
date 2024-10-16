@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"strconv"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors"
@@ -139,69 +140,80 @@ func (database *Database) GetUsers(ctx context.Context) ([]gen.User, error) {
 	}
 	return genUsers, err
 }
-func (database *Database) UpdateUntisLogin(genUser gen.User, untisName string, forename string, surname string, untisPWD string, key []byte, ctx context.Context) error {
+
+// Example UpdateUntisLogin using the new generic functions
+func (database *Database) UpdateUntisLogin(genUser gen.User, untisName, forename, surname, untisPWD string, key []byte, ctx context.Context) error {
 	var user dbModels.User
 	user.FromGen(genUser)
-	user.UntisName = untisName
-	err := dataCollectors.DataCollectors.UntisClient.SetupStudent(&user, forename, surname, untisPWD)
-	if err != nil {
-		return err
-	}
-	query := database.DB.NewUpdate()
-	query.Model(&user)
-	query.WherePK()
-	query.Column("untis_pwd", "untis_name", "untis_id")
 
+	// Encrypt the password before storing
 	encryptData, err := encrypt([]byte(untisPWD), key)
 	if err != nil {
 		return err
 	}
-	user.UntisPWD = base64.StdEncoding.EncodeToString(encryptData)
-	_, err = query.Exec(ctx)
+	encodedPWD := base64.StdEncoding.EncodeToString(encryptData)
 
+	// Update UntisName and UntisPWD settings
+	if err := database.UpdateUserSetting(user.Id, "untis", "untisname", untisName, ctx); err != nil {
+		return err
+	}
+	if err := database.UpdateUserSetting(user.Id, "untis", "untispwd", encodedPWD, ctx); err != nil {
+		return err
+	}
+
+	// Call UntisClient setup
+	untisId, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return dbModels.ErrUserNotFound
-		}
+		return err
+	}
+	if err := database.UpdateUserSetting(user.Id, "untis", "userid", strconv.Itoa(untisId), ctx); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx context.Context) (string, error) {
+func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx context.Context) (string, string, error) {
 	var user dbModels.User
 	user.FromGen(genUser)
-	query := database.DB.NewSelect()
-	query.Model(&user)
-	query.WherePK()
-	err := query.Scan(ctx)
 
+	// Retrieve the encrypted UntisPWD setting
+	encPWD, err := database.GetUserSetting(user.Id, "untis", "untispwd", ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", dbModels.ErrUserNotFound
+			return "", "", dbModels.ErrUserNotFound
 		}
-		return "", err
+		return "", "", err
 	}
 
-	untisPWD, err := base64.StdEncoding.DecodeString(user.UntisPWD)
+	// Retrieve the UntisName setting
+	untisName, err := database.GetUserSetting(user.Id, "untis", "untisname", ctx)
 	if err != nil {
-		return "", err
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", "", dbModels.ErrUserNotFound
+		}
+		return "", "", err
+	}
+
+	// Decode and decrypt the password
+	untisPWD, err := base64.StdEncoding.DecodeString(encPWD)
+	if err != nil {
+		return "", "", err
 	}
 	if len(untisPWD) == 0 {
-		return "", errors.New("no untis login")
+		return "", "", errors.New("no untis login")
 	}
 	decryptData, err := decrypt(untisPWD, key)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(decryptData), nil
+	return untisName, string(decryptData), nil
 }
-func (database *Database) GetUntisLoginByCryptoKey(CryptoKey string, user gen.User, ctx context.Context) (string, error) {
+func (database *Database) GetUntisLoginByCryptoKey(CryptoKey string, user gen.User, ctx context.Context) (string, string, error) {
 
 	key, err := base64.StdEncoding.DecodeString(CryptoKey)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	return database.GetUntisLogin(user, key, ctx)
 

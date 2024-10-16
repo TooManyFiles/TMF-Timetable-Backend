@@ -106,11 +106,12 @@ type User struct {
 	PwdHash         string   `bun:"pwdHash"`
 	Classes         []string `pg:"classes,array"`
 	Email           string   `pg:"email"`
-	UntisPWD        string   `pg:"untispwd"`
-	UntisName       string   `pg:"untisname"`
-	UntisId         int      `pg:"untisid"`
-	DefaultChoice   *Choice  `bun:"rel:belongs-to,join:defaultChoice=id"`
-	Class           *Class   `bun:"rel:belongs-to,join:classes=id"`
+	// UntisPWD        string        `pg:"untispwd"`
+	// UntisName       string        `pg:"untisname"`
+	// UntisId         int           `pg:"untisid"`
+	DefaultChoice *Choice       `bun:"rel:belongs-to,join:defaultChoice=id"`
+	Class         *Class        `bun:"rel:belongs-to,join:classes=id"`
+	Settings      []UserSetting `bun:"rel:has-many,join:id=userid"`
 }
 
 func (user *User) FromGen(genUser gen.User) User {
@@ -620,4 +621,12 @@ type WeekSubtitle struct {
 	bun.BaseModel `bun:"table:weeksubtitle"`
 	Date          time.Time `bun:"date,pk,unique,notnull,type:date" json:"date,omitempty"`
 	Subtitle      string    `json:"name,omitempty"`
+}
+
+type UserSetting struct {
+	bun.BaseModel    `bun:"table:user_settings"`
+	UserID           int    `bun:"userid,pk"`
+	SettingType      string `bun:",pk"`
+	SettingName      string `bun:",pk"`
+	SettingsVariable string
 }

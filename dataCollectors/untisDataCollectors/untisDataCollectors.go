@@ -115,9 +115,9 @@ func (untisClient UntisClient) GetLessonsByClass(class dbModels.Class, startDate
 	return lessons, nil
 }
 
-func (untisClient UntisClient) GetLessonsByStudent(student dbModels.User, untisPWD string, startDate time.Time, endDate time.Time, classId int) ([]structs.Period, error) {
+func (untisClient UntisClient) GetLessonsByStudent(UntisName string, untisPWD string, startDate time.Time, endDate time.Time, classId int) ([]structs.Period, error) {
 	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
-	dynamicClient.ApiConfig.User = student.UntisName
+	dynamicClient.ApiConfig.User = UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err := dynamicClient.Authenticate()
 	if err != nil {
@@ -164,30 +164,29 @@ func findPerson(students []structs.Student, foreName string, longName string) *s
 
 var ErrStudentNotFound = errors.New("student not found")
 
-func (untisClient UntisClient) SetupStudent(user *dbModels.User, forename string, surname string, untisPWD string) error {
+func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisPWD string) (int, error) {
 	err := untisClient.reAuthenticate()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	students, err := untisClient.staticClient.GetStudents()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	student := findPerson(students, forename, surname)
 	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
-	dynamicClient.ApiConfig.User = user.UntisName
+	dynamicClient.ApiConfig.User = untisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err = dynamicClient.Authenticate()
 	if err != nil {
 		dynamicClient.Logout()
-		return err
+		return 0, err
 	}
 	if student.ID == dynamicClient.PersonID {
-		user.UntisId = dynamicClient.PersonID
 		dynamicClient.Logout()
-		return nil
+		return dynamicClient.PersonID, nil
 	} else {
 		dynamicClient.Logout()
-		return ErrStudentNotFound
+		return 0, ErrStudentNotFound
 	}
 }
