@@ -223,3 +223,42 @@ func (database *Database) GetUntisLoginByCryptoKey(CryptoKey string, user gen.Us
 	return database.GetUntisLogin(user, key, ctx)
 
 }
+
+func (database *Database) UpdateUser(user gen.User, ctx context.Context) error {
+	var dbUser dbModels.User
+	err := database.DB.NewSelect().Model(&dbUser).Where("id = ?", user.Id).Scan(ctx)
+	if err != nil {
+		return err
+	}
+
+	columns := []string{}
+
+	if dbUser.Name != user.Name {
+		dbUser.Name = user.Name
+		columns = append(columns, "name")
+	}
+	if dbUser.Email != *user.Email {
+		dbUser.Email = *user.Email
+		columns = append(columns, "email")
+	}
+	if dbUser.Role != string(*user.Role) {
+		dbUser.Role = string(*user.Role)
+		columns = append(columns, "role")
+	}
+	if dbUser.DefaultChoiceId != *user.DefaultChoice.Id {
+		dbUser.DefaultChoiceId = *user.DefaultChoice.Id
+		columns = append(columns, "defaultChoice")
+	}
+	if len(columns) > 0 {
+		_, err := database.DB.NewUpdate().
+			Model(&dbUser).
+			Column(columns...).
+			WherePK().
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
