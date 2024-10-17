@@ -148,14 +148,13 @@ func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, user
 
 // Update a user by ID
 // (PUT /users/{userId})
-// TODO: implement PutUsersUserId
 func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
 	user, _, err := server.isLoggedIn(w, r)
-	if userId == -1 {
-		userId = *user.Id
-	}
 	if err != nil {
 		return
+	}
+	if userId == -1 {
+		userId = *user.Id
 	}
 	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
 		if userId != *user.Id {
@@ -184,7 +183,11 @@ func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, user
 		user.DefaultChoice.Id = JSONRequestBody.DefaultChoiceID
 	}
 	if update_user {
-		server.DB.UpdateUser(user, r.Context())
+		err = server.DB.UpdateUser(user, r.Context())
+		if err != nil {
+			http.Error(w, "Internal server error.", http.StatusInternalServerError)
+			return
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(JSONRequestBody)
