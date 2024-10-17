@@ -18,8 +18,8 @@ type UntisClient struct {
 
 func Init(apiConfig structs.ApiConfig) (UntisClient, error) {
 	untisClient := UntisClient{
-		staticClient:  untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG),
-		dynamicClient: untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG),
+		staticClient:  untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG, true),
+		dynamicClient: untisApi.NewClient(apiConfig, log.Default(), untisApi.DEBUG, true),
 	}
 	err := untisClient.staticClient.Authenticate()
 	if err != nil {
@@ -116,7 +116,7 @@ func (untisClient UntisClient) GetLessonsByClass(class dbModels.Class, startDate
 }
 
 func (untisClient UntisClient) GetLessonsByStudent(UntisName string, untisPWD string, startDate time.Time, endDate time.Time, classId int) ([]structs.Period, error) {
-	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG, true)
 	dynamicClient.ApiConfig.User = UntisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err := dynamicClient.Authenticate()
@@ -164,29 +164,32 @@ func findPerson(students []structs.Student, foreName string, longName string) *s
 
 var ErrStudentNotFound = errors.New("student not found")
 
-func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisPWD string) (int, int, error) {
+func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisPWD string) (int, int, int, error) {
 	err := untisClient.reAuthenticate()
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 	students, err := untisClient.staticClient.GetStudents()
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 	student := findPerson(students, forename, surname)
-	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
+	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG, true)
 	dynamicClient.ApiConfig.User = untisName
 	dynamicClient.ApiConfig.Password = untisPWD
 	err = dynamicClient.Authenticate()
 	if err != nil {
 		dynamicClient.Logout()
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 	if student.ID == dynamicClient.PersonID {
+		personType := dynamicClient.PersonType
+		personID := dynamicClient.PersonID
+		klasseID := dynamicClient.KlasseId
 		dynamicClient.Logout()
-		return dynamicClient.PersonID, dynamicClient.PersonType, nil
+		return personID, personType, klasseID, nil
 	} else {
 		dynamicClient.Logout()
-		return 0, 0, ErrStudentNotFound
+		return 0, 0, 0, ErrStudentNotFound
 	}
 }

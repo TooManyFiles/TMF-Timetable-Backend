@@ -154,23 +154,26 @@ func (database *Database) UpdateUntisLogin(genUser gen.User, untisName, forename
 	encodedPWD := base64.StdEncoding.EncodeToString(encryptData)
 
 	// Update UntisName and UntisPWD settings
-	if err := database.UpdateUserSetting(user.Id, "untis", "untisname", untisName, ctx); err != nil {
+	if err := database.UpdateUserSetting(user.Id, "untis", "untisName", untisName, ctx); err != nil {
 		return err
 	}
-	if err := database.UpdateUserSetting(user.Id, "untis", "untispwd", encodedPWD, ctx); err != nil {
+	if err := database.UpdateUserSetting(user.Id, "untis", "untisPWD", encodedPWD, ctx); err != nil {
 		return err
 	}
 
 	// Call UntisClient setup
-	untisId, personType, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
+	untisId, personType, classId, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
 	if err != nil {
 		return err
 	}
-	if err := database.UpdateUserSetting(user.Id, "untis", "userid", strconv.Itoa(untisId), ctx); err != nil {
+	if err := database.UpdateUserSetting(user.Id, "untis", "userId", strconv.Itoa(untisId), ctx); err != nil {
 		return err
 	}
 
 	if err := database.UpdateUserSetting(user.Id, "untis", "personType", strconv.Itoa(personType), ctx); err != nil {
+		return err
+	}
+	if err := database.UpdateUserSetting(user.Id, "untis", "classId", strconv.Itoa(classId), ctx); err != nil {
 		return err
 	}
 	return nil
@@ -181,7 +184,7 @@ func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx contex
 	user.FromGen(genUser)
 
 	// Retrieve the encrypted UntisPWD setting
-	encPWD, err := database.GetUserSetting(user.Id, "untis", "untispwd", ctx)
+	encPWD, err := database.GetUserSetting(user.Id, "untis", "untisPWD", ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", "", dbModels.ErrUserNotFound
@@ -190,7 +193,7 @@ func (database *Database) GetUntisLogin(genUser gen.User, key []byte, ctx contex
 	}
 
 	// Retrieve the UntisName setting
-	untisName, err := database.GetUserSetting(user.Id, "untis", "untisname", ctx)
+	untisName, err := database.GetUserSetting(user.Id, "untis", "untisName", ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", "", dbModels.ErrUserNotFound

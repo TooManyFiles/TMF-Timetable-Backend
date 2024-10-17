@@ -15,19 +15,22 @@ func (database *Database) UpdateUserSetting(userID int, settingType, settingName
 		SettingsVariable: settingValue,
 	}
 	_, err := database.DB.NewInsert().
-		On("CONFLICT (userid, settingtype, settingname) DO UPDATE").
-		Set("settingsvariable = EXCLUDED.settingsvariable").
 		Model(&setting).
+		On("CONFLICT (userid, setting_type, setting_name) DO UPDATE").
 		Exec(ctx)
 	return err
 }
 
 // GetUserSetting retrieves a specific user setting.
 func (database *Database) GetUserSetting(userID int, settingType, settingName string, ctx context.Context) (string, error) {
-	var setting dbModels.UserSetting
+	setting := dbModels.UserSetting{
+		UserID:      userID,
+		SettingType: settingType,
+		SettingName: settingName,
+	}
 	err := database.DB.NewSelect().
 		Model(&setting).
-		Where("userid = ? AND settingtype = ? AND settingname = ?", userID, settingType, settingName).
+		WherePK().
 		Scan(ctx)
 	return setting.SettingsVariable, err
 }
