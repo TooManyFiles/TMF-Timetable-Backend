@@ -52,6 +52,13 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 				return
 			}
 			out.Untis = lessons
+		case gen.PutViewJSONBodyProviderCafeteria:
+			menus, err := server.CafeteriaView(startdate, *params.Duration, r.Context())
+			if err != nil {
+				http.Error(w, "Error fetching menu", http.StatusInternalServerError)
+				return
+			}
+			out.Cafeteria = menus
 		default:
 			// Optionally handle unsupported providers
 			// http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
@@ -101,6 +108,13 @@ func (server Server) PutViewUserUserId(w http.ResponseWriter, r *http.Request, u
 			lessons, err := server.UntisView(user, nil, *body.Untis, startdate, enddate, true, r.Context())
 			http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 			out.Untis = lessons
+		case gen.PutViewUserUserIdJSONBodyProviderCafeteria:
+			menus, err := server.CafeteriaView(startdate, *params.Duration, r.Context())
+			if err != nil {
+				http.Error(w, "Error fetching menu", http.StatusInternalServerError)
+				return
+			}
+			out.Cafeteria = menus
 		default:
 			// Optionally handle unsupported providers
 			http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)

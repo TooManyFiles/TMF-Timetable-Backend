@@ -22,7 +22,7 @@ func (server Server) GetCafeteria(w http.ResponseWriter, r *http.Request, params
 		days = int(math.Max(1, math.Min(float64(*params.Duration), 7)))
 	}
 	// Fetch menu data from database
-	menus, err := server.DB.FetchMenuForDate(date, days, r.Context())
+	menus, err := server.CafeteriaView(date, days, r.Context())
 	if err != nil {
 		http.Error(w, "Error fetching menu", http.StatusInternalServerError)
 		return
