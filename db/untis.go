@@ -34,8 +34,9 @@ func (database *Database) FetchTeachers(ctx context.Context) error {
 		}
 		teachers[i] = teacher
 	}
-	querya := database.DB.NewInsert()
-	_, err = querya.Model(&teachers).Exec(ctx)
+	query := database.DB.NewInsert()
+	query.On("CONFLICT (id) DO UPDATE")
+	_, err = query.Model(&teachers).Exec(ctx)
 	return err
 }
 func (database *Database) GetTeachers(ctx context.Context) ([]gen.Teacher, error) {
@@ -64,8 +65,9 @@ func (database *Database) FetchSubjects(ctx context.Context) error {
 		}
 		subjects[i] = subject
 	}
-	querya := database.DB.NewInsert()
-	_, err = querya.Model(&subjects).Exec(ctx)
+	query := database.DB.NewInsert()
+	query.On("CONFLICT (id) DO UPDATE")
+	_, err = query.Model(&subjects).Exec(ctx)
 	return err
 }
 func (database *Database) GetSubjects(ctx context.Context) ([]gen.Subject, error) {
@@ -106,8 +108,9 @@ func (database *Database) FetchRooms(ctx context.Context) error {
 		}
 		rooms[i] = room
 	}
-	querya := database.DB.NewInsert()
-	_, err = querya.Model(&rooms).Exec(ctx)
+	query := database.DB.NewInsert()
+	query.On("CONFLICT (id) DO UPDATE")
+	_, err = query.Model(&rooms).Exec(ctx)
 	return err
 }
 func (database *Database) GetClasses(ctx context.Context) ([]gen.Class, error) {
@@ -137,8 +140,9 @@ func (database *Database) FetchClasses(ctx context.Context) error {
 		}
 		rooms[i] = teacher
 	}
-	querya := database.DB.NewInsert()
-	_, err = querya.Model(&rooms).Exec(ctx)
+	query := database.DB.NewInsert()
+	query.On("CONFLICT (id) DO UPDATE")
+	_, err = query.Model(&rooms).Exec(ctx)
 	return err
 }
 
