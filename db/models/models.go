@@ -540,8 +540,8 @@ func (subject *Subject) FromGen(genSubject gen.Subject) Subject {
 
 type Choice struct {
 	bun.BaseModel `bun:"table:choice"`
-	Id            int `bun:"id,pk,autoincrement,notnull"`
-	UserId        int `bun:"userId"`
+	Id            int `bun:"id,pk,autoincrement,notnull,unique"`
+	UserId        int `bun:"userId,pk"`
 	Name          string
 	Choice        string // Assuming this is a JSON field
 	User          *User  `bun:"rel:belongs-to,join:userId=id"`

@@ -66,7 +66,7 @@ type ServerInterface interface {
 	GetUsersUserIdChoices(w http.ResponseWriter, r *http.Request, userId int)
 	// Get a choice by userId and choiceId
 	// (GET /users/{userId}/choices/{choiceId})
-	GetUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request, userId string, choiceId int)
+	GetUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request, userId int, choiceId int)
 	// Modify or create a choice by userId and choiceId
 	// (POST /users/{userId}/choices/{choiceId})
 	PostUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *http.Request, userId int, choiceId int)
@@ -469,7 +469,7 @@ func (siw *ServerInterfaceWrapper) GetUsersUserIdChoicesChoiceId(w http.Response
 	var err error
 
 	// ------------- Path parameter "userId" -------------
-	var userId string
+	var userId int
 
 	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -642,7 +642,7 @@ func (siw *ServerInterfaceWrapper) GetWeekDate(w http.ResponseWriter, r *http.Re
 	// ------------- Path parameter "date" -------------
 	var date openapi_types.Date
 
-	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: false})
+	err = runtime.BindStyledParameterWithOptions("simple", "date", r.PathValue("date"), &date, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
 		return
