@@ -174,6 +174,9 @@ func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisP
 		return 0, 0, 0, err
 	}
 	student := findPerson(students, forename, surname)
+	if student == nil {
+		return 0, 0, 0, ErrStudentNotFound
+	}
 	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG, true)
 	dynamicClient.ApiConfig.User = untisName
 	dynamicClient.ApiConfig.Password = untisPWD
@@ -182,6 +185,7 @@ func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisP
 		dynamicClient.Logout()
 		return 0, 0, 0, err
 	}
+
 	if student.ID == dynamicClient.PersonID {
 		personType := dynamicClient.PersonType
 		personID := dynamicClient.PersonID

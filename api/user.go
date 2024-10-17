@@ -8,8 +8,10 @@ import (
 	"log"
 	"net/http"
 
+	untisApiStructs "github.com/Mr-Comand/goUntisAPI/structs"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/config"
+	"github.com/TooManyFiles/TMF-Timetable-Backend/dataCollectors/untisDataCollectors"
 	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"golang.org/x/crypto/bcrypt"
@@ -161,6 +163,19 @@ func (server Server) PutUserUntisAcc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, dbModels.ErrUserNotFound) {
 			http.Error(w, "User not found.", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, untisDataCollectors.ErrStudentNotFound) {
+			http.Error(w, "Student not found!", http.StatusNotFound)
+			return
+		}
+		var rpcError *untisApiStructs.RPCError
+		if errors.As(err, &rpcError) {
+			if rpcError.Code == -8504 {
+				http.Error(w, "Bad Untis credentials.", http.StatusUnprocessableEntity)
+			} else {
+				http.Error(w, "Internal server error.", http.StatusInternalServerError)
+			}
 			return
 		}
 		print(err.Error())
