@@ -180,11 +180,11 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 		return err
 	}
 	// Fetch the Untis password from user settings
-	untisPWD, err := database.GetUserSetting(user.Id, "untis", "untisPWD", ctx)
+	untisName, err := database.GetUserSetting(user.Id, "untis", "untisName", ctx)
 	if err != nil {
 		return err
 	}
-	periods, err := dataCollectors.DataCollectors.UntisClient.GetLessonsByStudent(untisPWD, untis_pwd, startDate, endDate, classId)
+	periods, err := dataCollectors.DataCollectors.UntisClient.GetLessonsByStudent(untisName, untis_pwd, startDate, endDate, classId)
 	if err != nil {
 		return err
 	}
