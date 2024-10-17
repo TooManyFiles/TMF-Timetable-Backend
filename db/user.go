@@ -162,11 +162,15 @@ func (database *Database) UpdateUntisLogin(genUser gen.User, untisName, forename
 	}
 
 	// Call UntisClient setup
-	untisId, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
+	untisId, personType, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
 	if err != nil {
 		return err
 	}
 	if err := database.UpdateUserSetting(user.Id, "untis", "userid", strconv.Itoa(untisId), ctx); err != nil {
+		return err
+	}
+
+	if err := database.UpdateUserSetting(user.Id, "untis", "personType", strconv.Itoa(personType), ctx); err != nil {
 		return err
 	}
 	return nil

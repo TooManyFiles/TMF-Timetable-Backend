@@ -164,14 +164,14 @@ func findPerson(students []structs.Student, foreName string, longName string) *s
 
 var ErrStudentNotFound = errors.New("student not found")
 
-func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisPWD string) (int, error) {
+func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisPWD string) (int, int, error) {
 	err := untisClient.reAuthenticate()
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	students, err := untisClient.staticClient.GetStudents()
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	student := findPerson(students, forename, surname)
 	dynamicClient := untisApi.NewClient(untisClient.dynamicClient.ApiConfig, log.Default(), untisApi.DEBUG)
@@ -180,13 +180,13 @@ func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisP
 	err = dynamicClient.Authenticate()
 	if err != nil {
 		dynamicClient.Logout()
-		return 0, err
+		return 0, 0, err
 	}
 	if student.ID == dynamicClient.PersonID {
 		dynamicClient.Logout()
-		return dynamicClient.PersonID, nil
+		return dynamicClient.PersonID, dynamicClient.PersonType, nil
 	} else {
 		dynamicClient.Logout()
-		return 0, ErrStudentNotFound
+		return 0, 0, ErrStudentNotFound
 	}
 }

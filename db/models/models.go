@@ -99,19 +99,16 @@ func (class *Class) FromGen(genClass gen.Class) Class {
 // User model
 type User struct {
 	bun.BaseModel   `bun:"table:user"`
-	Id              int      `bun:"id,pk,autoincrement,notnull"`
-	Name            string   `bun:"name,unique"`
-	Role            string   `bun:"role"`
-	DefaultChoiceId int      `bun:"defaultChoice"`
-	PwdHash         string   `bun:"pwdHash"`
-	Classes         []string `pg:"classes,array"`
-	Email           string   `pg:"email"`
-	// UntisPWD        string        `pg:"untispwd"`
-	// UntisName       string        `pg:"untisname"`
-	// UntisId         int           `pg:"untisid"`
-	DefaultChoice *Choice       `bun:"rel:belongs-to,join:defaultChoice=id"`
-	Class         *Class        `bun:"rel:belongs-to,join:classes=id"`
-	Settings      []UserSetting `bun:"rel:has-many,join:id=userid"`
+	Id              int           `bun:"id,pk,autoincrement,notnull"`
+	Name            string        `bun:"name,unique"`
+	Role            string        `bun:"role"`
+	DefaultChoiceId int           `bun:"defaultChoice"`
+	PwdHash         string        `bun:"pwdHash"`
+	Classes         []string      `pg:"classes,array"`
+	Email           string        `pg:"email"`
+	DefaultChoice   *Choice       `bun:"rel:belongs-to,join:defaultChoice=id"`
+	Class           *Class        `bun:"rel:belongs-to,join:classes=id"`
+	Settings        []UserSetting `bun:"rel:has-many,join:id=userid"`
 }
 
 func (user *User) FromGen(genUser gen.User) User {
