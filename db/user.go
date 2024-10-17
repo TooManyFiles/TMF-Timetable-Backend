@@ -153,23 +153,21 @@ func (database *Database) UpdateUntisLogin(genUser gen.User, untisName, forename
 	}
 	encodedPWD := base64.StdEncoding.EncodeToString(encryptData)
 
-	// Update UntisName and UntisPWD settings
+	// Call UntisClient setup
+	untisId, personType, classId, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
+	if err != nil {
+		return err
+	}
+	// Update settings ind db
 	if err := database.UpdateUserSetting(user.Id, "untis", "untisName", untisName, ctx); err != nil {
 		return err
 	}
 	if err := database.UpdateUserSetting(user.Id, "untis", "untisPWD", encodedPWD, ctx); err != nil {
 		return err
 	}
-
-	// Call UntisClient setup
-	untisId, personType, classId, err := dataCollectors.DataCollectors.UntisClient.SetupStudent(untisName, forename, surname, untisPWD)
-	if err != nil {
-		return err
-	}
 	if err := database.UpdateUserSetting(user.Id, "untis", "userId", strconv.Itoa(untisId), ctx); err != nil {
 		return err
 	}
-
 	if err := database.UpdateUserSetting(user.Id, "untis", "personType", strconv.Itoa(personType), ctx); err != nil {
 		return err
 	}
