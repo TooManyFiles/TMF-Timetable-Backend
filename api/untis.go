@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
 )
 
 func (server Server) GetUntisClasses(w http.ResponseWriter, r *http.Request) {
@@ -67,8 +69,12 @@ func (server Server) GetUntisTeachers(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(teachers)
 }
 func (server Server) GetUntisFetch(w http.ResponseWriter, r *http.Request) {
-	_, _, err := server.isLoggedIn(w, r) //TODO: check if admin
+	user, _, err := server.isLoggedIn(w, r)
 	if err != nil {
+		return
+	}
+	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
+		http.Error(w, "Insufficient permission.", http.StatusForbidden)
 		return
 	}
 	err = server.DB.FetchTeachers(r.Context())

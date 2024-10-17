@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -20,8 +19,16 @@ import (
 // Get all users
 // (GET /users)
 func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
+	user, _, err := server.isLoggedIn(w, r)
+	if err != nil {
+		return
+	}
+	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
+		http.Error(w, "Insufficient permission.", http.StatusForbidden)
+		return
+	}
 	var resp []gen.User
-	resp, err := server.DB.GetUsers(r.Context())
+	resp, err = server.DB.GetUsers(r.Context())
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		log.Print(err.Error())
@@ -36,8 +43,14 @@ func (server Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 // (POST /users)
 func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 	if !config.Config.CanSignUp {
-		http.Error(w, "SignUp is currently disabled on this server.", http.StatusForbidden)
-		return
+		user, _, err := server.isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+		if user.Role == nil || *user.Role != gen.UserRoleAdmin {
+			http.Error(w, "SignUp is currently disabled on this server.", http.StatusForbidden)
+			return
+		}
 	}
 	var userWithPW gen.PostUsersJSONRequestBody
 	err := json.NewDecoder(r.Body).Decode(&userWithPW)
@@ -47,7 +60,6 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.NewEncoder(log.Writer()).Encode(userWithPW)
-	fmt.Println(userWithPW)
 	if userWithPW.UserData == nil || userWithPW.Password == nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -93,7 +105,15 @@ func (server Server) PostUsers(w http.ResponseWriter, r *http.Request) {
 // Delete a user by ID
 // (DELETE /users/{userId})
 func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
-	err := server.DB.DeleteUserByID(userId, r.Context())
+	user, _, err := server.isLoggedIn(w, r)
+	if err != nil {
+		return
+	}
+	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
+		http.Error(w, "Insufficient permission.", http.StatusForbidden)
+		return
+	}
+	err = server.DB.DeleteUserByID(userId, r.Context())
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
@@ -104,6 +124,14 @@ func (server Server) DeleteUsersUserId(w http.ResponseWriter, r *http.Request, u
 // Get a user by ID
 // (GET /users/{userId})
 func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
+	user, _, err := server.isLoggedIn(w, r)
+	if err != nil {
+		return
+	}
+	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
+		http.Error(w, "Insufficient permission.", http.StatusForbidden)
+		return
+	}
 	resp, err := server.DB.GetUserByID(userId, r.Context())
 	if err != nil {
 		if errors.Is(err, dbModels.ErrUserNotFound) {

@@ -29,7 +29,7 @@ func getPointerIfNotEmpty[T any](v T) *T {
 			return &v
 		}
 	case reflect.String:
-		if strVal, ok := any(v).(string); ok && strVal != "" {
+		if val.String() != "" {
 			return &v
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
