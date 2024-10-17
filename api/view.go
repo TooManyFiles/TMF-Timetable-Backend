@@ -2,13 +2,17 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
-	dbModels "github.com/TooManyFiles/TMF-Timetable-Backend/db/models"
 )
+
+type ViewOutput struct {
+	Untis     interface{} `json:untis`
+	Cafeteria interface{} `json:cafeteria`
+	Week      interface{} `json:week`
+}
 
 // Get events by a user
 // (PUT /view)
@@ -31,43 +35,30 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	_, untis_pwd, err := server.DB.GetUntisLoginByCryptoKey(claims.CryptoKey, user, r.Context())
-	if err != nil {
-		http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
-		return
-	}
 	startdate := time.Now().Truncate(24 * time.Hour)
 	if params.Date != nil && !params.Date.IsZero() {
 		startdate = params.Date.Time
 	}
 	enddate := time.Time(startdate)
 	enddate = enddate.AddDate(0, 0, *params.Duration)
-	for _, classId := range *user.Classes {
-		err = server.DB.FetchLesson(user, untis_pwd, classId, startdate, enddate, r.Context())
-		if err != nil {
-			fmt.Println("Failed to FetchLesson: " + err.Error())
+
+	out := ViewOutput{}
+	for _, provider := range body.Provider {
+		switch provider {
+		case gen.PutViewJSONBodyProviderUntis:
+			lessons, err := server.UntisView(user, claims, *body.Untis, startdate, enddate, true, r.Context())
+			if err != nil {
+				http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			out.Untis = lessons
+		default:
+			// Optionally handle unsupported providers
+			// http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
 		}
+
 	}
 
-	lessonFilter := dbModels.LessonFilter{
-		User:      (&dbModels.User{}).FromGen(user),
-		StartDate: startdate,
-		EndDate:   enddate,
-	}
-	if body.Untis.Choice != nil {
-		lessonFilter.Choice = (&dbModels.Choice{}).FromGen(*body.Untis.Choice)
-	}
-	resp, err := server.DB.GetLesson(lessonFilter, r.Context())
-	if err != nil {
-		http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	out := struct {
-		Untis interface{} `json:untis`
-	}{
-		Untis: &resp,
-	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -103,27 +94,20 @@ func (server Server) PutViewUserUserId(w http.ResponseWriter, r *http.Request, u
 	enddate := time.Time(startdate)
 	enddate = enddate.AddDate(0, 0, *params.Duration)
 
-	lessonFilter := dbModels.LessonFilter{
-		User:      dbModels.User{Id: userId},
-		StartDate: startdate,
-		EndDate:   enddate,
-	}
-	if body.Untis.Choice != nil {
-		lessonFilter.Choice = (&dbModels.Choice{}).FromGen(*body.Untis.Choice)
-	}
-	resp, err := server.DB.GetLesson(lessonFilter, r.Context())
-	if err != nil {
-		http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	out := ViewOutput{}
+	for _, provider := range body.Provider {
+		switch provider {
+		case gen.PutViewUserUserIdJSONBodyProviderUntis:
+			lessons, err := server.UntisView(user, nil, *body.Untis, startdate, enddate, true, r.Context())
+			http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
+			out.Untis = lessons
+		default:
+			// Optionally handle unsupported providers
+			http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
+		}
 
-	out := struct {
-		Untis interface{} `json:untis`
-	}{
-		Untis: &resp,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
 	_ = json.NewEncoder(w).Encode(out)
 }

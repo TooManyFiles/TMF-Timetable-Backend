@@ -334,7 +334,12 @@ func (database *Database) GetLesson(filter dbModels.LessonFilter, ctx context.Co
 				}
 				return nil, err
 			}
-			choice = *filter.User.DefaultChoice
+			if filter.User.DefaultChoice == nil {
+				return nil, fmt.Errorf("no DefaultChoice")
+			} else {
+				choice = *filter.User.DefaultChoice
+			}
+
 		} else {
 			choice = filter.Choice
 			userQuery := database.DB.NewSelect()
