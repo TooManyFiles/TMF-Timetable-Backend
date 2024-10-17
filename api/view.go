@@ -59,11 +59,18 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 				return
 			}
 			out.Cafeteria = menus
+		case gen.PutViewJSONBodyProviderWeek:
+			subtitle, err := server.WeekView(startdate, r.Context())
+			if err != nil {
+				http.Error(w, "Error fetching week", http.StatusInternalServerError)
+				return
+			}
+			out.Week = subtitle
 		default:
 			// Optionally handle unsupported providers
-			// http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
+			http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
+			return
 		}
-
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -115,9 +122,17 @@ func (server Server) PutViewUserUserId(w http.ResponseWriter, r *http.Request, u
 				return
 			}
 			out.Cafeteria = menus
+		case gen.PutViewUserUserIdJSONBodyProviderWeek:
+			subtitle, err := server.WeekView(startdate, r.Context())
+			if err != nil {
+				http.Error(w, "Error fetching week", http.StatusInternalServerError)
+				return
+			}
+			out.Week = subtitle
 		default:
 			// Optionally handle unsupported providers
 			http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
+			return
 		}
 
 	}

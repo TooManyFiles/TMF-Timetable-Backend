@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -17,12 +16,11 @@ func (server Server) GetWeekDate(w http.ResponseWriter, r *http.Request, date op
 
 		_ = json.NewEncoder(w).Encode("No date provided.")
 	}
-	subtitle, err := server.DB.GetWeekSubtitle(date.Time, r.Context())
+	subtitle, err := server.WeekView(date.Time, r.Context())
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode("Internal error")
-		fmt.Println(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
