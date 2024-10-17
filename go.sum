@@ -6,8 +6,8 @@ cloud.google.com/go/auth/oauth2adapt v0.2.4/go.mod h1:jC/jOpwFP6JBxhB3P5Rr0a9HLM
 cloud.google.com/go/compute/metadata v0.5.2 h1:UxK4uu/Tn+I3p2dYWTfiX4wva7aYlKixAHn3fyqngqo=
 cloud.google.com/go/compute/metadata v0.5.2/go.mod h1:C66sj2AluDcIqakBq/M8lw8/ybHgOZqin2obFxa/E5k=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/Mr-Comand/goUntisAPI v1.2.0 h1:PI+SEdSfHv94f1kXR3TeRkbMbF0SD8t8PANqCFK9v2Q=
-github.com/Mr-Comand/goUntisAPI v1.2.0/go.mod h1:NwF/qKA99KxLVk7x5WEGFQZPk+OfCoTZUaYEAi1pL6o=
+github.com/Mr-Comand/goUntisAPI v1.2.1 h1:N133L5JtSounT0ZCposlUNZyvkrycXLxCs3oi62HEbw=
+github.com/Mr-Comand/goUntisAPI v1.2.1/go.mod h1:NwF/qKA99KxLVk7x5WEGFQZPk+OfCoTZUaYEAi1pL6o=
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
 github.com/apapsch/go-jsonmerge/v2 v2.0.0 h1:axGnT1gRIfimI7gJifB699GoE/oq+F2MU7Dml6nw9rQ=
 github.com/apapsch/go-jsonmerge/v2 v2.0.0/go.mod h1:lvDnEdqiQrp0O42VQGgmlKpxL1AP2+08jFMw88y4klk=

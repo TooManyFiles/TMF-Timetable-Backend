@@ -175,7 +175,12 @@ func (database *Database) FetchLesson(genUser gen.User, untis_pwd string, classI
 	if err != nil {
 		return err
 	}
-	periods, err := dataCollectors.DataCollectors.UntisClient.GetLessonsByStudent(user, untis_pwd, startDate, endDate, classId)
+	// Fetch the Untis password from user settings
+	untisPWD, err := database.GetUserSetting(user.Id, "untis", "untisPWD", ctx)
+	if err != nil {
+		return err
+	}
+	periods, err := dataCollectors.DataCollectors.UntisClient.GetLessonsByStudent(untisPWD, untis_pwd, startDate, endDate, classId)
 	if err != nil {
 		return err
 	}
@@ -357,7 +362,7 @@ func (database *Database) GetLesson(filter dbModels.LessonFilter, ctx context.Co
 		query.Model(&filter.Choice)
 		query.WherePK()
 		if filter.User.Role != string(gen.UserRoleAdmin) {
-			query.Where("\"choice\".\"userId\" = ?", filter.User.Id) //TODO: disable if Admin
+			query.Where("\"choice\".\"userId\" = ?", filter.User.Id)
 		}
 		err = query.Scan(ctx)
 		if err != nil {
