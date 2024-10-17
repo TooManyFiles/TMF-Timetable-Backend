@@ -223,3 +223,18 @@ func (database *Database) GetUntisLoginByCryptoKey(CryptoKey string, user gen.Us
 	return database.GetUntisLogin(user, key, ctx)
 
 }
+
+func (database *Database) UpdateUser(user gen.User, ctx context.Context) error {
+	var dbUser dbModels.User
+	dbUser.FromGen(user)
+
+	update := database.DB.NewUpdate()
+	update.Model(&dbUser)
+	update.WherePK()
+	_, err := update.Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -150,10 +150,44 @@ func (server Server) GetUsersUserId(w http.ResponseWriter, r *http.Request, user
 // (PUT /users/{userId})
 // TODO: implement PutUsersUserId
 func (server Server) PutUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
-	var resp []gen.User
-
+	user, _, err := server.isLoggedIn(w, r)
+	if userId == -1 {
+		userId = *user.Id
+	}
+	if err != nil {
+		return
+	}
+	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
+		if userId != *user.Id {
+			http.Error(w, "Insufficient permission.", http.StatusForbidden)
+			return
+		}
+	}
+	var JSONRequestBody gen.PutUsersUserIdJSONRequestBody
+	err = json.NewDecoder(r.Body).Decode(&JSONRequestBody)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println(err.Error())
+		return
+	}
+	update_user := false
+	if JSONRequestBody.Name != nil {
+		update_user = true
+		user.Name = *JSONRequestBody.Name
+	}
+	if JSONRequestBody.Email != nil {
+		update_user = true
+		user.Email = JSONRequestBody.Email
+	}
+	if JSONRequestBody.DefaultChoiceID != nil {
+		update_user = true
+		user.DefaultChoice.Id = JSONRequestBody.DefaultChoiceID
+	}
+	if update_user {
+		server.DB.UpdateUser(user, r.Context())
+	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(JSONRequestBody)
 }
 
 // Returns currently logged in user.

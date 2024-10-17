@@ -4,6 +4,8 @@
 package gen
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -147,6 +149,19 @@ type User struct {
 // UserRole defines model for User.Role.
 type UserRole string
 
+// UserSettings defines model for UserSettings.
+type UserSettings struct {
+	// DefaultChoiceID id of default Choice
+	DefaultChoiceID *int `json:"defaultChoiceID,omitempty"`
+
+	// Email User email
+	Email *string `json:"email,omitempty"`
+
+	// Name User name
+	Name                 *string                `json:"name,omitempty"`
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
 // Week Week subtitle for the Week the date(startDate) is in.
 type Week = string
 
@@ -229,7 +244,7 @@ type PutUserUntisAccJSONRequestBody PutUserUntisAccJSONBody
 type PostUsersJSONRequestBody PostUsersJSONBody
 
 // PutUsersUserIdJSONRequestBody defines body for PutUsersUserId for application/json ContentType.
-type PutUsersUserIdJSONRequestBody = User
+type PutUsersUserIdJSONRequestBody = UserSettings
 
 // PostUsersUserIdChoicesChoiceIdJSONRequestBody defines body for PostUsersUserIdChoicesChoiceId for application/json ContentType.
 type PostUsersUserIdChoicesChoiceIdJSONRequestBody = Choice
@@ -239,3 +254,101 @@ type PutViewJSONRequestBody PutViewJSONBody
 
 // PutViewUserUserIdJSONRequestBody defines body for PutViewUserUserId for application/json ContentType.
 type PutViewUserUserIdJSONRequestBody PutViewUserUserIdJSONBody
+
+// Getter for additional properties for UserSettings. Returns the specified
+// element and whether it was found
+func (a UserSettings) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for UserSettings
+func (a *UserSettings) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for UserSettings to handle AdditionalProperties
+func (a *UserSettings) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["defaultChoiceID"]; found {
+		err = json.Unmarshal(raw, &a.DefaultChoiceID)
+		if err != nil {
+			return fmt.Errorf("error reading 'defaultChoiceID': %w", err)
+		}
+		delete(object, "defaultChoiceID")
+	}
+
+	if raw, found := object["email"]; found {
+		err = json.Unmarshal(raw, &a.Email)
+		if err != nil {
+			return fmt.Errorf("error reading 'email': %w", err)
+		}
+		delete(object, "email")
+	}
+
+	if raw, found := object["name"]; found {
+		err = json.Unmarshal(raw, &a.Name)
+		if err != nil {
+			return fmt.Errorf("error reading 'name': %w", err)
+		}
+		delete(object, "name")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for UserSettings to handle AdditionalProperties
+func (a UserSettings) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.DefaultChoiceID != nil {
+		object["defaultChoiceID"], err = json.Marshal(a.DefaultChoiceID)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'defaultChoiceID': %w", err)
+		}
+	}
+
+	if a.Email != nil {
+		object["email"], err = json.Marshal(a.Email)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'email': %w", err)
+		}
+	}
+
+	if a.Name != nil {
+		object["name"], err = json.Marshal(a.Name)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'name': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
