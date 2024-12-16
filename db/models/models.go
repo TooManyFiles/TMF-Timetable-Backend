@@ -632,7 +632,7 @@ type UserSetting struct {
 type Holyday struct {
 	bun.BaseModel `bun:"table:holyday"`
 	StartDate     time.Time `bun:"startDate,pk,notnull,type:date" json:"startDate,omitempty"`
-	EndDate       time.Time `bun:"endDate,pk,notnull,type:date" json:"endDate,omitempty"`
+	EndDate       time.Time `bun:"endDate,pk,notnull,type:date" json:"endDate,omitempty"` //date of the last Day if ony one Day same as StartDate
 	Name          string    `json:"name,omitempty"`
 }
 
