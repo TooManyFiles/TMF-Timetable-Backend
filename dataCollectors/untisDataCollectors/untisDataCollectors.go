@@ -197,3 +197,14 @@ func (untisClient UntisClient) SetupStudent(untisName, forename, surname, untisP
 		return 0, 0, 0, ErrStudentNotFound
 	}
 }
+func (untisClient UntisClient) GetHolidays() ([]structs.Holiday, error) {
+	err := untisClient.reAuthenticate()
+	if err != nil {
+		return nil, err
+	}
+	holidays, err := untisClient.staticClient.GetHolidays()
+	if err != nil {
+		return nil, err
+	}
+	return holidays, nil
+}

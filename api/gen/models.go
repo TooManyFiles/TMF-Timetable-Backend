@@ -34,6 +34,7 @@ const (
 // Defines values for PutViewJSONBodyProvider.
 const (
 	PutViewJSONBodyProviderCafeteria PutViewJSONBodyProvider = "cafeteria"
+	PutViewJSONBodyProviderHolyday   PutViewJSONBodyProvider = "holyday"
 	PutViewJSONBodyProviderUntis     PutViewJSONBodyProvider = "untis"
 	PutViewJSONBodyProviderWeek      PutViewJSONBodyProvider = "week"
 )
@@ -41,6 +42,7 @@ const (
 // Defines values for PutViewUserUserIdJSONBodyProvider.
 const (
 	PutViewUserUserIdJSONBodyProviderCafeteria PutViewUserUserIdJSONBodyProvider = "cafeteria"
+	PutViewUserUserIdJSONBodyProviderHolyday   PutViewUserUserIdJSONBodyProvider = "holyday"
 	PutViewUserUserIdJSONBodyProviderUntis     PutViewUserUserIdJSONBodyProvider = "untis"
 	PutViewUserUserIdJSONBodyProviderWeek      PutViewUserUserIdJSONBodyProvider = "week"
 )
@@ -64,6 +66,18 @@ type Class struct {
 	Name                   *string `json:"name,omitempty"`
 	SecondaryClassLeaderId *int    `json:"secondaryClassLeaderId,omitempty"`
 	SecondaryTeacherId     *int    `json:"secondaryTeacherId,omitempty"`
+}
+
+// Holyday defines model for Holyday.
+type Holyday struct {
+	// EndDate End date of the Holyday
+	EndDate *openapi_types.Date `json:"endDate,omitempty"`
+
+	// Name Name of the Holyday
+	Name *string `json:"name,omitempty"`
+
+	// StartDate Start date of the Holyday
+	StartDate *openapi_types.Date `json:"startDate,omitempty"`
 }
 
 // Lesson defines model for Lesson.

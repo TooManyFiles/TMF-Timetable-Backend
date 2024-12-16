@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
+	"github.com/oapi-codegen/runtime/types"
 	"github.com/uptrace/bun"
 )
 
@@ -626,4 +627,34 @@ type UserSetting struct {
 	SettingType      string `bun:",pk"`
 	SettingName      string `bun:",pk"`
 	SettingsVariable string
+}
+
+type Holyday struct {
+	bun.BaseModel `bun:"table:holyday"`
+	StartDate     time.Time `bun:"startDate,pk,notnull,type:date" json:"startDate,omitempty"`
+	EndDate       time.Time `bun:"endDate,pk,notnull,type:date" json:"endDate,omitempty"`
+	Name          string    `json:"name,omitempty"`
+}
+
+func (holyday *Holyday) ToGen() gen.Holyday {
+	return gen.Holyday{
+		Name:      getPointerIfNotEmpty(holyday.Name),
+		StartDate: &types.Date{Time: holyday.StartDate},
+		EndDate:   &types.Date{Time: holyday.EndDate},
+	}
+}
+func (holyday *Holyday) FromGen(genHolyday gen.Holyday) Holyday {
+	if holyday == nil {
+		holyday = &Holyday{}
+	}
+	if genHolyday.Name != nil && *genHolyday.Name != "" {
+		holyday.Name = *genHolyday.Name
+	}
+	if genHolyday.StartDate != nil {
+		holyday.StartDate = genHolyday.StartDate.Time
+	}
+	if genHolyday.EndDate != nil {
+		holyday.EndDate = genHolyday.EndDate.Time
+	}
+	return *holyday
 }

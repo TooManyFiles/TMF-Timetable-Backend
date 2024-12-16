@@ -93,7 +93,11 @@ func (server Server) GetUntisFetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = server.DB.FetchClasses(r.Context())
-
+	if err != nil {
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	err = server.DB.FetchHolydays(r.Context())
 	if err != nil {
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return

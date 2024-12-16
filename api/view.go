@@ -9,9 +9,10 @@ import (
 )
 
 type ViewOutput struct {
-	Untis     interface{} `json:untis`
-	Cafeteria interface{} `json:cafeteria`
-	Week      interface{} `json:week`
+	Untis     interface{} `json:untis,omitempty`
+	Cafeteria interface{} `json:cafeteria,omitempty`
+	Week      interface{} `json:week,omitempty`
+	Holydays  interface{} `json:holydays,omitempty`
 }
 
 // Get events by a user
@@ -35,37 +36,44 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	startdate := time.Now().Truncate(24 * time.Hour)
+	startDate := time.Now().Truncate(24 * time.Hour)
 	if params.Date != nil && !params.Date.IsZero() {
-		startdate = params.Date.Time
+		startDate = params.Date.Time
 	}
-	enddate := time.Time(startdate)
-	enddate = enddate.AddDate(0, 0, *params.Duration)
+	endDate := time.Time(startDate)
+	endDate = endDate.AddDate(0, 0, *params.Duration)
 
 	out := ViewOutput{}
 	for _, provider := range body.Provider {
 		switch provider {
 		case gen.PutViewJSONBodyProviderUntis:
-			lessons, err := server.UntisView(user, claims, *body.Untis, startdate, enddate, true, r.Context())
+			lessons, err := server.UntisView(user, claims, *body.Untis, startDate, endDate, true, r.Context())
 			if err != nil {
 				http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 				return
 			}
 			out.Untis = lessons
 		case gen.PutViewJSONBodyProviderCafeteria:
-			menus, err := server.CafeteriaView(startdate, *params.Duration, r.Context())
+			menus, err := server.CafeteriaView(startDate, *params.Duration, r.Context())
 			if err != nil {
 				http.Error(w, "Error fetching menu", http.StatusInternalServerError)
 				return
 			}
 			out.Cafeteria = menus
 		case gen.PutViewJSONBodyProviderWeek:
-			subtitle, err := server.WeekView(startdate, r.Context())
+			subtitle, err := server.WeekView(startDate, r.Context())
 			if err != nil {
 				http.Error(w, "Error fetching week", http.StatusInternalServerError)
 				return
 			}
 			out.Week = subtitle
+		case gen.PutViewJSONBodyProviderHolyday:
+			holydays, err := server.HolydayView(startDate, *params.Duration, r.Context())
+			if err != nil {
+				http.Error(w, "Error fetching week", http.StatusInternalServerError)
+				return
+			}
+			out.Holydays = holydays
 		default:
 			// Optionally handle unsupported providers
 			http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
@@ -101,34 +109,41 @@ func (server Server) PutViewUserUserId(w http.ResponseWriter, r *http.Request, u
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		return
 	}
-	startdate := time.Now().Truncate(24 * time.Hour)
+	startDate := time.Now().Truncate(24 * time.Hour)
 	if params.Date != nil && !params.Date.IsZero() {
-		startdate = params.Date.Time
+		startDate = params.Date.Time
 	}
-	enddate := time.Time(startdate)
-	enddate = enddate.AddDate(0, 0, *params.Duration)
+	endDate := time.Time(startDate)
+	endDate = endDate.AddDate(0, 0, *params.Duration)
 
 	out := ViewOutput{}
 	for _, provider := range body.Provider {
 		switch provider {
 		case gen.PutViewUserUserIdJSONBodyProviderUntis:
-			lessons, err := server.UntisView(user, nil, *body.Untis, startdate, enddate, true, r.Context())
+			lessons, err := server.UntisView(user, nil, *body.Untis, startDate, endDate, true, r.Context())
 			http.Error(w, "Internal server error."+err.Error(), http.StatusInternalServerError)
 			out.Untis = lessons
 		case gen.PutViewUserUserIdJSONBodyProviderCafeteria:
-			menus, err := server.CafeteriaView(startdate, *params.Duration, r.Context())
+			menus, err := server.CafeteriaView(startDate, *params.Duration, r.Context())
 			if err != nil {
 				http.Error(w, "Error fetching menu", http.StatusInternalServerError)
 				return
 			}
 			out.Cafeteria = menus
 		case gen.PutViewUserUserIdJSONBodyProviderWeek:
-			subtitle, err := server.WeekView(startdate, r.Context())
+			subtitle, err := server.WeekView(startDate, r.Context())
 			if err != nil {
 				http.Error(w, "Error fetching week", http.StatusInternalServerError)
 				return
 			}
 			out.Week = subtitle
+		case gen.PutViewUserUserIdJSONBodyProviderHolyday:
+			holydays, err := server.HolydayView(startDate, *params.Duration, r.Context())
+			if err != nil {
+				http.Error(w, "Error fetching week", http.StatusInternalServerError)
+				return
+			}
+			out.Holydays = holydays
 		default:
 			// Optionally handle unsupported providers
 			http.Error(w, "Unsupported provider: "+string(provider), http.StatusBadRequest)
