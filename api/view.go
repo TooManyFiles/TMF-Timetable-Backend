@@ -20,7 +20,7 @@ func (server Server) PutView(w http.ResponseWriter, r *http.Request, params gen.
 	if params.Duration == nil {
 		params.Duration = new(int)
 		*params.Duration = 1
-	} else if *params.Duration < 1 || *params.Duration > 7 {
+	} else if *params.Duration < 1 || *params.Duration > 21 {
 		http.Error(w, "Invalid request body. Duration out of bounce.", http.StatusBadRequest)
 		return
 	}
