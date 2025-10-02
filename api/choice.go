@@ -30,6 +30,7 @@ func (server Server) GetUsersUserIdChoices(w http.ResponseWriter, r *http.Reques
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(choices)
 }
 
@@ -58,7 +59,7 @@ func (server Server) GetUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *htt
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(choice)
 }
 
@@ -91,6 +92,7 @@ func (server Server) PostUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(choice)
 	w.WriteHeader(http.StatusCreated)
 }
