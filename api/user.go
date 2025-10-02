@@ -260,7 +260,7 @@ func (server Server) GetUserSettingsSettingTypeSetting(w http.ResponseWriter, r 
 		return
 	}
 
-	if settingType == "untis" && *user.Role != gen.UserRoleAdmin {
+	if settingType == "untis" && *user.Role != gen.UserRoleAdmin && (setting == "untisPWD" || setting == "untisName") {
 		http.Error(w, "Insufficient permission.", http.StatusForbidden)
 		return
 	}
@@ -282,7 +282,6 @@ func (server Server) GetUserSettingsSettingTypeSetting(w http.ResponseWriter, r 
 		// If it's not valid JSON, return it as a JSON string
 		jsonValue = value
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(jsonValue); err != nil {
