@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Dev Image
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
 
   
-      - name: Build Docker Image
+      - name: Build Docker dev Image
         run: |
           docker build -t ghcr.io/toomanyfiles/tmf-timetable-backend:dev .
 
@@ -27,6 +27,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push Docker Image with version, minor, major, and latest tags
+      - name: Push Docker Dev Image with version, minor, major, and latest tags
         run: |
           docker push ghcr.io/toomanyfiles/tmf-timetable-backend:dev

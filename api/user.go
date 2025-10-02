@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -241,6 +242,101 @@ func (server Server) PutUserUntisAcc(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, "Internal server error.", http.StatusInternalServerError)
 			}
+			return
+		}
+		print(err.Error())
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
+}
+
+// reads the defined setting form activeuser.
+// (GET /user/settings/{settingType}/{setting})
+func (server Server) GetUserSettingsSettingTypeSetting(w http.ResponseWriter, r *http.Request, settingType string, setting string) {
+	user, _, err := server.isLoggedIn(w, r)
+	if err != nil {
+		return
+	}
+
+	if settingType == "untis" && *user.Role != gen.UserRoleAdmin {
+		http.Error(w, "Insufficient permission.", http.StatusForbidden)
+		return
+	}
+
+	value, err := server.DB.GetUserSetting(*user.Id, settingType, setting, r.Context())
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Setting is empty or dose not exist.", http.StatusNoContent)
+			return
+		}
+		log.Println(err.Error())
+		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+
+	// Try to unmarshal the value as JSON first
+	var jsonValue interface{}
+	if err := json.Unmarshal([]byte(value), &jsonValue); err != nil {
+		// If it's not valid JSON, return it as a JSON string
+		jsonValue = value
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(jsonValue); err != nil {
+		log.Println("Error encoding response:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+// Update the defined setting of the active user
+// (PUT /user/settings/{settingType}/{setting})
+func (server Server) PutUserSettingsSettingTypeSetting(w http.ResponseWriter, r *http.Request, settingType string, setting string) {
+	user, _, err := server.isLoggedIn(w, r)
+	if err != nil {
+		return
+	}
+
+	var rawValue interface{}
+	err = json.NewDecoder(r.Body).Decode(&rawValue)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println(err.Error())
+		return
+	}
+
+	// Convert the value to a string if it's already a string,
+	// otherwise marshal it back to JSON string
+	var value string
+	switch v := rawValue.(type) {
+	case string:
+		value = v
+	default:
+		jsonBytes, err := json.Marshal(rawValue)
+		if err != nil {
+			http.Error(w, "Failed to process request body", http.StatusInternalServerError)
+			log.Println(err.Error())
+			return
+		}
+		value = string(jsonBytes)
+	}
+
+	if settingType == "untis" && *user.Role != gen.UserRoleAdmin {
+		http.Error(w, "Insufficient permission.", http.StatusForbidden)
+		return
+	}
+
+	err = server.DB.UpdateUserSetting(*user.Id, settingType, setting, value, r.Context())
+	if err != nil {
+		if errors.Is(err, dbModels.ErrUserNotFound) {
+			http.Error(w, "User not found.", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, untisDataCollectors.ErrStudentNotFound) {
+			http.Error(w, "Student not found!", http.StatusNotFound)
 			return
 		}
 		print(err.Error())

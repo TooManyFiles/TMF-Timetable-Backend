@@ -622,8 +622,8 @@ type WeekSubtitle struct {
 
 type UserSetting struct {
 	bun.BaseModel    `bun:"table:user_settings"`
-	UserID           int    `bun:"userid,pk"`
-	SettingType      string `bun:",pk"`
-	SettingName      string `bun:",pk"`
+	UserID           int    `bun:"userid,pk,notnull"`
+	SettingType      string `bun:",pk,notnull"`
+	SettingName      string `bun:",pk,notnull"`
 	SettingsVariable string
 }
