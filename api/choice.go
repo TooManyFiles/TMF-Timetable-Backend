@@ -44,6 +44,9 @@ func (server Server) GetUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *htt
 	if userId == -1 {
 		userId = *user.Id
 	}
+	if choiceId == -1 {
+		choiceId = *user.DefaultChoice.Id
+	}
 	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
 		if userId != *user.Id {
 			http.Error(w, "Forbidden", http.StatusForbidden)
@@ -72,6 +75,9 @@ func (server Server) PostUsersUserIdChoicesChoiceId(w http.ResponseWriter, r *ht
 	}
 	if userId == -1 {
 		userId = *user.Id
+	}
+	if choiceId == -1 {
+		choiceId = *user.DefaultChoice.Id
 	}
 	if user.Role == nil || *user.Role != gen.UserRoleAdmin {
 		if userId != *user.Id {

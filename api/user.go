@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	untisApiStructs "github.com/Mr-Comand/goUntisAPI/structs"
 	"github.com/TooManyFiles/TMF-Timetable-Backend/api/gen"
@@ -246,6 +247,31 @@ func (server Server) PutUserUntisAcc(w http.ResponseWriter, r *http.Request) {
 		}
 		print(err.Error())
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		return
+	}
+	classIdStr, err := server.DB.GetUserSetting(*user.Id, "untis", "classId", r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	classId, err := strconv.Atoi(classIdStr)
+	if err != nil {
+		http.Error(w, "invalid classId", http.StatusBadRequest)
+		return
+	}
+
+	classes := []int{classId}
+	user.Classes = &classes
+	println("updated user classes:")
+
+	// Dereferenzieren und ausgeben
+	for _, c := range *user.Classes {
+		println(c)
+	}
+
+	if err := server.DB.UpdateUser(user, r.Context()); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

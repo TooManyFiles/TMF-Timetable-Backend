@@ -249,6 +249,18 @@ func (database *Database) UpdateUser(user gen.User, ctx context.Context) error {
 		dbUser.DefaultChoiceId = *user.DefaultChoice.Id
 		columns = append(columns, "defaultChoice")
 	}
+	if user.Classes != nil {
+		stringClasses := make([]string, len(*user.Classes))
+		for i, c := range *user.Classes {
+			stringClasses[i] = strconv.Itoa(c)
+		}
+
+		if !slicesEqualStrings(dbUser.Classes, stringClasses) {
+			dbUser.Classes = stringClasses
+			columns = append(columns, "classes")
+		}
+	}
+
 	if len(columns) > 0 {
 		_, err := database.DB.NewUpdate().
 			Model(&dbUser).
@@ -261,4 +273,15 @@ func (database *Database) UpdateUser(user gen.User, ctx context.Context) error {
 	}
 
 	return nil
+}
+func slicesEqualStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
