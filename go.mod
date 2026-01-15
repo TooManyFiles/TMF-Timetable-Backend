@@ -7,7 +7,7 @@ toolchain go1.24.7
 require (
 	github.com/Mr-Comand/goUntisAPI v1.2.1
 	github.com/go-resty/resty/v2 v2.14.0
-	github.com/golang-jwt/jwt/v4 v4.5.1
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/invopop/yaml v0.3.1
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/rs/cors v1.11.1
